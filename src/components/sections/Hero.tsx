@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import { Phone } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/utils";
 
-const WHATSAPP_NUMBER = "918088042521";
+const WHATSAPP_NUMBER = "919164363131";
 const PHONE_NUMBER = "01205244768";
 
 export default function Hero() {

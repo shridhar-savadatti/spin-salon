@@ -7,7 +7,7 @@ import { Phone, MapPin, Mail, Clock } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import PageAnalytics from "@/components/PageAnalytics";
 
-const WHATSAPP_NUMBER = "918088042521";
+const WHATSAPP_NUMBER = "919164363131";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
@@ -85,13 +85,13 @@ export default function ContactPage() {
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@spinkudlu.com" className="flex items-start gap-4 transition hover:text-zinc-700">
+                <a href="mailto:spinsalonkudlu2431@gmail.com" className="flex items-start gap-4 transition hover:text-zinc-700">
                   <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-zinc-700">
                     <Mail size={18} />
                   </div>
                   <div>
                     <p className="font-semibold text-zinc-900">Email</p>
-                    <p className="text-zinc-500">hello@spinkudlu.com</p>
+                    <p className="text-zinc-500">spinsalonkudlu2431@gmail.com</p>
                   </div>
                 </a>
               </li>
@@ -101,9 +101,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-zinc-900">Hours</p>
-                  <p className="text-zinc-500">Mon–Fri: 9:00 AM – 6:00 PM</p>
-                  <p className="text-zinc-500">Saturday: 9:00 AM – 5:00 PM</p>
-                  <p className="text-zinc-500">Sunday: Closed</p>
+                  <p className="text-zinc-500">Mon–Sun: 8:30 AM – 8:30 PM</p>
+                  <p className="text-zinc-500"></p>
+                  <p className="text-zinc-500"></p>
                 </div>
               </li>
             </ul>

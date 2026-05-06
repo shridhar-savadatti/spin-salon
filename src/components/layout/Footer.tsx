@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Phone, MapPin, Mail } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/utils";
 
-const WHATSAPP_NUMBER = "918088042521";
+const WHATSAPP_NUMBER = "919164363131";
 
 export default function Footer() {
   return (
@@ -66,9 +66,9 @@ export default function Footer() {
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Opening Hours</h3>
             <ul className="space-y-2 text-sm">
               {[
-                { day: "Mon – Fri", hours: "9:00 AM – 6:00 PM" },
-                { day: "Saturday", hours: "9:00 AM – 5:00 PM" },
-                { day: "Sunday", hours: "Closed" },
+                { day: "Mon – Sun", hours: "8:30 AM – 8:30 PM" },
+                
+                
               ].map((h) => (
                 <li key={h.day} className="flex justify-between gap-4">
                   <span className="text-zinc-400">{h.day}</span>
@@ -95,9 +95,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@spinkudlu.com" className="flex items-center gap-3 transition hover:text-white">
+                <a href="mailto:spinsalonkudlu2431@gmail.com" className="flex items-center gap-3 transition hover:text-white">
                   <Mail size={16} className="shrink-0 text-zinc-400" />
-                  <span>hello@spinkudlu.com</span>
+                  <span>spinsalonkudlu2431@gmail.com</span>
                 </a>
               </li>
               <li>

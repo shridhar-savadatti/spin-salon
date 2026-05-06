@@ -43,7 +43,7 @@ const jsonLd = {
   description: "Spin Unisex Salon in Kudlu, Bengaluru — premium haircuts, colouring, facials, nails and more. Near HSR Layout.",
   url: BASE_URL,
   telephone: "0120-524-4768",
-  email: "hello@spinkudlu.com",
+  email: "spinsalonkudlu2431@gmail.com",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Kudlu Main Road, Kudlu Gate",
@@ -61,14 +61,14 @@ const jsonLd = {
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "09:00",
-      closes: "18:00",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      opens: "08:30",
+      closes: "20:30",
     },
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: "Saturday",
-      opens: "09:00",
+      opens: "08:30",
       closes: "17:00",
     },
   ],

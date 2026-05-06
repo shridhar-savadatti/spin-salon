@@ -31,10 +31,7 @@ export function getDateRange(days: number): string[] {
   for (let i = 0; i <= days; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    // Skip Sundays (0)
-    if (d.getDay() !== 0) {
-      dates.push(d.toISOString().split("T")[0]);
-    }
+    dates.push(d.toISOString().split("T")[0]);
   }
   return dates;
 }
