@@ -63,7 +63,13 @@ export async function GET(req: NextRequest) {
       .replace(/\{fullname\}/g, r.customer_name as string)
       .replace(/\{service\}/g, r.service_name as string)
       .replace(/\{salon\}/g, "Spin Unisex Salon");
-    const phone = (r.customer_phone as string).replace(/[^0-9]/g, "");
+    // Ensure full international format for wa.me (add 91 for Indian numbers)
+    const digits = (r.customer_phone as string).replace(/[^0-9]/g, "");
+    const phone = digits.startsWith("91") && digits.length === 12
+      ? digits
+      : digits.length === 10
+      ? `91${digits}`
+      : digits;
     return {
       name: r.customer_name, phone: r.customer_phone,
       serviceName: r.service_name, lastVisit: r.last_visit,

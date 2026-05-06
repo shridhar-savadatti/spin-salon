@@ -40,6 +40,12 @@ export function getDateRange(days: number): string[] {
 }
 
 export function buildWhatsAppUrl(phone: string, message: string): string {
-  const cleanPhone = phone.replace(/\D/g, "");
+  const digits = phone.replace(/\D/g, "");
+  // Ensure 91 country code for Indian numbers
+  const cleanPhone = digits.startsWith("91") && digits.length === 12
+    ? digits
+    : digits.length === 10
+    ? `91${digits}`
+    : digits;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
