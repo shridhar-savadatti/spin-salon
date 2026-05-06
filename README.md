@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LuxeSalon — Production-Ready Salon Website
 
-## Getting Started
+A complete, full-stack salon website built with **Next.js 16**, **Tailwind CSS**, and **SQLite**.
 
-First, run the development server:
+## Features
+
+- **Public site**: Home, Services, About, Gallery, Contact
+- **Booking flow**: Multi-step appointment booking (service → date/time → details → confirmation)
+- **WhatsApp integration**: Pre-filled booking confirmation message
+- **Admin dashboard**: View & manage appointments, block time slots, analytics
+- **Auth**: JWT-based admin login (httpOnly cookie)
+- **Database**: SQLite via better-sqlite3 (zero-config, file-based)
+- **SEO**: Meta tags on every page
+- **Analytics**: Page view tracking built-in
+
+---
+
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Access the Admin Dashboard
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Go to [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
 
-## Learn More
+**Default credentials:**
+- Username: `admin`
+- Password: `admin123`
 
-To learn more about Next.js, take a look at the following resources:
+> **Important:** Change the JWT_SECRET and admin password before deploying to production.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── page.tsx                  # Home
+│   ├── services/page.tsx         # Services & Pricing
+│   ├── about/page.tsx            # About + Team
+│   ├── gallery/page.tsx          # Gallery grid
+│   ├── contact/page.tsx          # Contact + map + form
+│   ├── booking/page.tsx          # Multi-step booking
+│   ├── admin/
+│   │   ├── login/page.tsx        # Admin login
+│   │   ├── appointments/page.tsx # View & manage appointments
+│   │   ├── slots/page.tsx        # Block/unblock time slots
+│   │   └── analytics/page.tsx    # Page view + booking stats
+│   └── api/
+│       ├── appointments/         # GET all, POST create, PATCH status
+│       ├── slots/                # GET available, POST block/toggle
+│       ├── auth/                 # login, logout, me
+│       ├── contact/              # Contact form
+│       └── analytics/            # Page tracking
+├── components/
+│   ├── layout/                   # Navbar, Footer
+│   ├── sections/                 # Hero, Services, Testimonials, etc.
+│   ├── ui/                       # Button, Input, Select, Badge
+│   └── admin/                    # AdminNav
+├── lib/
+│   ├── db.ts                     # SQLite connection + schema init
+│   ├── auth.ts                   # JWT helpers
+│   ├── services-data.ts          # Static service catalog
+│   └── utils.ts                  # Formatting helpers
+├── types/index.ts                # TypeScript types
+└── proxy.ts                      # Route protection (Next.js 16 proxy)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+data/
+└── salon.db                      # SQLite database (auto-created on first run)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Customization
+
+### Change salon info
+- **Name, phone, address**: `src/components/layout/Footer.tsx`, `src/app/contact/page.tsx`
+- **WhatsApp number**: Search for `WHATSAPP_NUMBER` constant (Footer, Hero, Contact, Booking)
+- **Services & pricing**: `src/lib/services-data.ts`
+- **Team members**: `src/app/about/page.tsx`
+- **Testimonials**: `src/components/sections/Testimonials.tsx`
+
+### Change admin password
+Run in a Node.js REPL to generate a new hash:
+```js
+const bcrypt = require('bcryptjs');
+console.log(bcrypt.hashSync('your-new-password', 10));
+```
+Then update the hash in the SQLite database (`data/salon.db`):
+```sql
+UPDATE admin_users SET password_hash = '<new-hash>' WHERE username = 'admin';
+```
+
+### Add real images
+Place images in `public/images/` and reference them in gallery/about pages.
+
+---
+
+## Production Deployment
+
+```bash
+npm run build
+npm start
+```
+
+**Before going live:**
+1. Set a strong `JWT_SECRET` in `.env.local`
+2. Change the admin password
+3. Update salon contact info and WhatsApp number
+4. Update Google Maps embed in `src/app/contact/page.tsx`
+5. Add a real email service to `src/app/api/contact/route.ts`
+6. Replace gradient placeholders in Gallery with real photos
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Styling | Tailwind CSS v4 |
+| Database | SQLite (better-sqlite3) |
+| Auth | JWT (jsonwebtoken) + bcryptjs |
+| Icons | lucide-react |
+| Language | TypeScript |
