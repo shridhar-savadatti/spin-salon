@@ -51,7 +51,7 @@ export default function AdminAppointmentsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, appointment?: Appointment) => {
     setUpdating(id);
     await fetch(`${window.location.origin}/api/appointments/${id}`, {
       method: "PATCH",
@@ -60,6 +60,14 @@ export default function AdminAppointmentsPage() {
     });
     setUpdating(null);
     load();
+
+    // Open WhatsApp to notify customer when confirming
+    if (status === "confirmed" && appointment) {
+      const digits = appointment.customerPhone.replace(/\D/g, "");
+      const phone = digits.length === 10 ? `91${digits}` : digits;
+      const msg = `Hi ${appointment.customerName.split(" ")[0]}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}\n\nSee you soon! 😊`;
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+    }
   };
 
   const filtered = appointments.filter(a => {
@@ -154,7 +162,7 @@ export default function AdminAppointmentsPage() {
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
                               {a.status === "pending" && (
-                                <button onClick={() => updateStatus(a.id, "confirmed")} disabled={updating === a.id}
+                                <button onClick={() => updateStatus(a.id, "confirmed", a)} disabled={updating === a.id}
                                   className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-50">Confirm</button>
                               )}
                               {a.status === "confirmed" && (
