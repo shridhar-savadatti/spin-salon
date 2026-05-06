@@ -12,7 +12,7 @@ import { TimeSlot, Staff } from "@/types";
 import { CheckCircle, Clock, ChevronRight, Search, X, ArrowLeft } from "lucide-react";
 import PageAnalytics from "@/components/PageAnalytics";
 
-const WHATSAPP_NUMBER = "919876543210";
+const WHATSAPP_NUMBER = "918088042521";
 const AVAILABLE_DATES = getDateRange(21);
 
 type Step = 1 | 2 | 3 | 4 | 5;

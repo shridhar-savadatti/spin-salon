@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Phone, MapPin, Mail } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/utils";
 
-const WHATSAPP_NUMBER = "919876543210";
+const WHATSAPP_NUMBER = "918088042521";
 
 export default function Footer() {
   return (

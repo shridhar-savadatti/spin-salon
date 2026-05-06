@@ -7,7 +7,7 @@ import { Phone, MapPin, Mail, Clock } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import PageAnalytics from "@/components/PageAnalytics";
 
-const WHATSAPP_NUMBER = "919876543210";
+const WHATSAPP_NUMBER = "918088042521";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
