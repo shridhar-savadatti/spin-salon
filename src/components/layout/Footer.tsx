@@ -88,11 +88,12 @@ export default function Footer() {
                   Kudlu Main Road, Kudlu Gate, Bengaluru, Karnataka 560068
                 </a>
               </li>
-              <li>
-                <a href="tel:01205244768" className="flex items-center gap-3 transition hover:text-white">
-                  <Phone size={16} className="shrink-0 text-zinc-400" />
-                  <span>0120-524-4768</span>
-                </a>
+              <li className="flex items-start gap-3">
+                <Phone size={16} className="mt-0.5 shrink-0 text-zinc-400" />
+                <div>
+                  <a href="tel:01205244768" className="block transition hover:text-white">0120-524-4768</a>
+                  <a href="tel:919164363131" className="block transition hover:text-white">+91 91643 63131</a>
+                </div>
               </li>
               <li>
                 <a href="mailto:spinsalonkudlu2431@gmail.com" className="flex items-center gap-3 transition hover:text-white">

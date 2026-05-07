@@ -74,15 +74,16 @@ export default function ContactPage() {
                 </div>
               </li>
               <li>
-                <a href="tel:01205244768" className="flex items-start gap-4 transition hover:text-zinc-700">
+                <div className="flex items-start gap-4">
                   <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-zinc-700">
                     <Phone size={18} />
                   </div>
                   <div>
                     <p className="font-semibold text-zinc-900">Phone (Click to Call)</p>
-                    <p className="text-zinc-500">0120-524-4768</p>
+                    <a href="tel:01205244768" className="block text-zinc-500 hover:text-zinc-900 transition">0120-524-4768</a>
+                    <a href="tel:919164363131" className="block text-zinc-500 hover:text-zinc-900 transition">+91 91643 63131</a>
                   </div>
-                </a>
+                </div>
               </li>
               <li>
                 <a href="mailto:spinsalonkudlu2431@gmail.com" className="flex items-start gap-4 transition hover:text-zinc-700">
