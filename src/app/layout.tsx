@@ -65,12 +65,6 @@ const jsonLd = {
       opens: "08:30",
       closes: "21:00",
     },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "08:30",
-      closes: "17:00",
-    },
   ],
   priceRange: "₹₹",
   hasMap: "https://maps.app.goo.gl/uztdRtsVakV416SR7",
