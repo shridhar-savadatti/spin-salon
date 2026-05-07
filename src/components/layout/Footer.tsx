@@ -66,7 +66,7 @@ export default function Footer() {
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Opening Hours</h3>
             <ul className="space-y-2 text-sm">
               {[
-                { day: "Mon – Sun", hours: "8:30 AM – 8:30 PM" },
+                { day: "Mon – Sun", hours: "8:30 AM – 9:00 PM" },
                 
                 
               ].map((h) => (

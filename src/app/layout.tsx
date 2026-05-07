@@ -63,7 +63,7 @@ const jsonLd = {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
       opens: "08:30",
-      closes: "20:30",
+      closes: "21:00",
     },
     {
       "@type": "OpeningHoursSpecification",
