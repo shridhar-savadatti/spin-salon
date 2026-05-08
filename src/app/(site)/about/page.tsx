@@ -16,7 +16,7 @@ const TEAM = [
   { name: "Munesh Chinnaswamy", role: "Owner", bio: "Passionate about delivering premium salon experiences. Leads the Kudlu outlet with a focus on quality and client happiness.", initials: "MC", highlight: true },
   { name: "Rakesh", role: "Hair Dresser", bio: "Expert in precision cuts and modern styling techniques for all hair types.", initials: "R" },
   { name: "Guru", role: "Hair Dresser", bio: "Skilled in creative cuts, balayage, and hair colour transformations.", initials: "G" },
-  { name: "Rajnath", role: "Hair Dresser", bio: "Specialises in men's grooming, fades, and contemporary hairstyles.", initials: "Rj" },
+  { name: "Rajat", role: "Hair Dresser", bio: "Specialises in men's grooming, fades, and contemporary hairstyles.", initials: "Rj" },
   { name: "Reshma", role: "Beautician", bio: "Expert in facials, skin treatments, and bridal beauty packages.", initials: "Re" },
   { name: "Purnima", role: "Beautician", bio: "Specialises in threading, waxing, and traditional beauty rituals.", initials: "P" },
   { name: "Amisha", role: "Beautician", bio: "Nail artist and skin care specialist with an eye for detail.", initials: "A" },

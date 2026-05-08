@@ -122,7 +122,7 @@ export async function initDb() {
     const staffMembers = [
       { id: "staff-1", name: "Rakesh", role: "Hair Dresser" },
       { id: "staff-2", name: "Guru", role: "Hair Dresser" },
-      { id: "staff-3", name: "Rajnath", role: "Hair Dresser" },
+      { id: "staff-3", name: "Rajat", role: "Hair Dresser" },
       { id: "staff-4", name: "Reshma", role: "Beautician" },
       { id: "staff-5", name: "Purnima", role: "Beautician" },
       { id: "staff-6", name: "Amisha", role: "Beautician" },

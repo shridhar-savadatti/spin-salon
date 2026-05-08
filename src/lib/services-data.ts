@@ -25,11 +25,14 @@ export const SERVICES: Service[] = [
 
   // ─── MEN'S HAIR ────────────────────────────────────────────────
   { id: "m-haircut", name: "Hair Cut", category: "Men's Hair", description: "Classic or modern cut with wash and style.", duration: 30, price: 250 },
+  { id: "m-advance-haircut", name: "Men Advance Hair Cut", category: "Men's Hair", description: "Premium advanced styling haircut with expert finish.", duration: 45, price: 300 },
   { id: "m-beard-trim", name: "Beard Trim", category: "Men's Hair", description: "Neat, shaped beard trim.", duration: 20, price: 150 },
+  { id: "m-advance-beard", name: "Men Advance Beard", category: "Men's Hair", description: "Premium beard shaping and advanced styling.", duration: 30, price: 300 },
   { id: "m-beard-shave", name: "Beard Shave", category: "Men's Hair", description: "Clean razor shave.", duration: 20, price: 150 },
   { id: "m-beard-styling", name: "Beard Styling", category: "Men's Hair", description: "Creative beard shaping and styling.", duration: 30, price: 200 },
   { id: "m-shampoo-style", name: "Shampoo & Styling", category: "Men's Hair", description: "Wash and style finish.", duration: 25, price: 150 },
   { id: "m-child-haircut", name: "Child Haircut", category: "Men's Hair", description: "Gentle haircut for boys.", duration: 20, price: 200 },
+  { id: "m-child-advance-haircut", name: "Child Advance Hair Cut", category: "Men's Hair", description: "Premium advanced styling haircut for kids.", duration: 30, price: 300 },
   { id: "m-beard-colour", name: "Beard Colour", category: "Men's Hair", description: "Natural-looking beard colour.", duration: 30, price: 300 },
   { id: "m-root-touchup", name: "Root Touch Up", category: "Men's Hair", description: "Refresh hair colour at the roots.", duration: 60, price: 800 },
   { id: "m-global-color", name: "Global Hair Colour", category: "Men's Hair", description: "Full head colour treatment.", duration: 75, price: 900 },
