@@ -5,7 +5,7 @@ import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { formatDate, formatTime, formatCurrency } from "@/lib/utils";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, MessageCircle } from "lucide-react";
 
 interface Appointment {
   id: string; customerName: string; customerPhone: string;
@@ -17,6 +17,23 @@ interface Staff { id: string; name: string; role: string; }
 
 const STATUSES = ["all", "pending", "confirmed", "completed", "cancelled"];
 
+function buildWaLink(appointment: Appointment, status: string): string {
+  const digits = appointment.customerPhone.replace(/\D/g, "");
+  const phone = digits.length === 10 ? `91${digits}` : digits;
+  const name = appointment.customerName.split(" ")[0];
+  const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}`;
+
+  let msg = "";
+  if (status === "confirmed") {
+    msg = `Hi ${name}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.${details}\n\nSee you soon! 😊`;
+  } else if (status === "cancelled") {
+    msg = `Hi ${name}! ❌ Your appointment at Spin Unisex Salon has been *cancelled*.${details}\n\nWe're sorry. Please call us to reschedule:\n📞 +91 91643 63131`;
+  } else if (status === "completed") {
+    msg = `Hi ${name}! 🙏 Thank you for visiting Spin Unisex Salon!\n\nWe hope you loved your ${appointment.serviceName}. See you again! Book at spinkudlu.com`;
+  }
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+}
+
 export default function AdminAppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -25,6 +42,8 @@ export default function AdminAppointmentsPage() {
   const [staffFilter, setStaffFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  // Track pending WhatsApp notifications: { appointmentId -> { status, waLink } }
+  const [pendingWa, setPendingWa] = useState<Record<string, { status: string; waLink: string }>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,7 +70,7 @@ export default function AdminAppointmentsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const updateStatus = async (id: string, status: string, appointment?: Appointment) => {
+  const updateStatus = async (id: string, status: string, appointment: Appointment) => {
     setUpdating(id);
     await fetch(`${window.location.origin}/api/appointments/${id}`, {
       method: "PATCH",
@@ -61,23 +80,12 @@ export default function AdminAppointmentsPage() {
     setUpdating(null);
     load();
 
-    // Send WhatsApp notification to customer
-    if (appointment && (status === "confirmed" || status === "cancelled" || status === "completed")) {
-      const digits = appointment.customerPhone.replace(/\D/g, "");
-      const phone = digits.length === 10 ? `91${digits}` : digits;
-      const name = appointment.customerName.split(" ")[0];
-      const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}`;
-
-      let msg = "";
-      if (status === "confirmed") {
-        msg = `Hi ${name}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.${details}\n\nSee you soon! 😊`;
-      } else if (status === "cancelled") {
-        msg = `Hi ${name}! ❌ Your appointment at Spin Unisex Salon has been *cancelled*.${details}\n\nWe're sorry for the inconvenience. Please call us to reschedule:\n📞 +91 91643 63131`;
-      } else if (status === "completed") {
-        msg = `Hi ${name}! 🙏 Thank you for visiting Spin Unisex Salon!\n\nWe hope you loved your ${appointment.serviceName}. We'd love to see you again! Book your next appointment at spinkudlu.com`;
-      }
-
-      if (msg) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+    // Store pending WhatsApp notification — user taps the button directly
+    if (status === "confirmed" || status === "cancelled" || status === "completed") {
+      setPendingWa(prev => ({
+        ...prev,
+        [id]: { status, waLink: buildWaLink(appointment, status) },
+      }));
     }
   };
 
@@ -113,7 +121,6 @@ export default function AdminAppointmentsPage() {
           <div className="py-20 text-center text-zinc-400">Loading appointments...</div>
         ) : (
           <>
-            {/* Status filter */}
             <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
               {STATUSES.map(s => (
                 <button key={s} onClick={() => setFilter(s)}
@@ -124,7 +131,6 @@ export default function AdminAppointmentsPage() {
               ))}
             </div>
 
-            {/* Search + stylist filter */}
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
               <div className="flex flex-1 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5">
                 <Search size={16} className="shrink-0 text-zinc-400" />
@@ -174,15 +180,34 @@ export default function AdminAppointmentsPage() {
                             <div className="flex flex-wrap gap-1">
                               {a.status === "pending" && (
                                 <button onClick={() => updateStatus(a.id, "confirmed", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-50">Confirm</button>
+                                  className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-50">
+                                  Confirm
+                                </button>
                               )}
                               {a.status === "confirmed" && (
                                 <button onClick={() => updateStatus(a.id, "completed", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-100 disabled:opacity-50">Complete</button>
+                                  className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-100 disabled:opacity-50">
+                                  Complete
+                                </button>
                               )}
                               {a.status !== "cancelled" && a.status !== "completed" && (
                                 <button onClick={() => updateStatus(a.id, "cancelled", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">Cancel</button>
+                                  className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">
+                                  Cancel
+                                </button>
+                              )}
+                              {/* WhatsApp notify button — appears after action, direct tap = no popup block */}
+                              {pendingWa[a.id] && (
+                                <a
+                                  href={pendingWa[a.id].waLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setPendingWa(prev => { const n = {...prev}; delete n[a.id]; return n; })}
+                                  className="flex items-center gap-1 rounded-lg bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700"
+                                >
+                                  <MessageCircle size={11} />
+                                  Notify {pendingWa[a.id].status === "confirmed" ? "✅" : pendingWa[a.id].status === "cancelled" ? "❌" : "🙏"}
+                                </a>
                               )}
                             </div>
                           </td>
