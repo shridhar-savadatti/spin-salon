@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Blog",
   description: "Hair care tips, beauty advice, and salon news from Spin Unisex Salon, Kudlu Bengaluru.",
-  alternates: { canonical: "https://spinkudlu.com/blog" },
+  alternates: { canonical: "https://www.spinkudlu.com/blog" },
 };
 
 function formatDate(iso: string) {

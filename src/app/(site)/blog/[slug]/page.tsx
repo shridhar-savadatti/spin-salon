@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const rows = await sql`SELECT title, excerpt FROM blog_posts WHERE slug = ${slug} AND published = 1`;
   if (!rows[0]) return { title: "Post Not Found" };
   const r = rows[0] as { title: string; excerpt: string };
-  return { title: r.title, description: r.excerpt, alternates: { canonical: `https://spinkudlu.com/blog/${slug}` } };
+  return { title: r.title, description: r.excerpt, alternates: { canonical: `https://www.spinkudlu.com/blog/${slug}` } };
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {

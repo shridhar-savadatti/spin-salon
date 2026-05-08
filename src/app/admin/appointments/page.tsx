@@ -25,11 +25,11 @@ function buildWaLink(appointment: Appointment, status: string): string {
 
   let msg = "";
   if (status === "confirmed") {
-    msg = `Hi ${name}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.${details}\n\nSee you soon! 😊`;
+    msg = `Hi ${name}! ✅ Your appointment at *Spin Unisex Salon, Kudlu Bengaluru* is confirmed.${details}\n\nSee you soon! 😊`;
   } else if (status === "cancelled") {
-    msg = `Hi ${name}! ❌ Your appointment at Spin Unisex Salon has been *cancelled*.${details}\n\nWe're sorry. Please call us to reschedule:\n📞 +91 91643 63131`;
+    msg = `Hi ${name}! ❌ Your appointment at *Spin Unisex Salon, Kudlu Bengaluru* has been cancelled.${details}\n\nWe're sorry. Please call us to reschedule:\n📞 +91 91643 63131`;
   } else if (status === "completed") {
-    msg = `Hi ${name}! 🙏 Thank you for visiting Spin Unisex Salon!\n\nWe hope you loved your ${appointment.serviceName}. See you again! Book at spinkudlu.com`;
+    msg = `Hi ${name}! 🙏 Thank you for visiting *Spin Unisex Salon, Kudlu Bengaluru*!\n\nWe hope you loved your ${appointment.serviceName}. See you again! Book at spinkudlu.com`;
   }
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }

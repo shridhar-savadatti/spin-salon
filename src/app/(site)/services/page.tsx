@@ -9,8 +9,8 @@ import PageAnalytics from "@/components/PageAnalytics";
 export const metadata: Metadata = {
   title: "Services & Pricing",
   description: "Explore all hair, skin, nail, and treatment services at Spin Unisex Salon Bengaluru with transparent pricing.",
-  alternates: { canonical: "https://spinkudlu.com/services" },
-  openGraph: { url: "https://spinkudlu.com/services" },
+  alternates: { canonical: "https://www.spinkudlu.com/services" },
+  openGraph: { url: "https://www.spinkudlu.com/services" },
 };
 
 export default function ServicesPage() {

@@ -4,7 +4,7 @@ import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
-const BASE_URL = "https://spinkudlu.com";
+const BASE_URL = "https://www.spinkudlu.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

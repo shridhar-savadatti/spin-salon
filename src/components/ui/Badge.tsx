@@ -17,7 +17,7 @@ export default function Badge({ status, className }: BadgeProps) {
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize",
-        colorMap[status] ?? "bg-stone-100 text-stone-600 border-stone-200",
+        colorMap[status] ?? "bg-zinc-100 text-zinc-600 border-zinc-200",
         className
       )}
     >

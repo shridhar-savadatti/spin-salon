@@ -8,8 +8,8 @@ import PageAnalytics from "@/components/PageAnalytics";
 export const metadata: Metadata = {
   title: "About Us",
   description: "Learn about Spin Unisex Salon's story — founded in 2010 in Bengaluru, now 100+ outlets across India. Our Kudlu team is led by owner Munesh Chinnaswamy.",
-  alternates: { canonical: "https://spinkudlu.com/about" },
-  openGraph: { url: "https://spinkudlu.com/about" },
+  alternates: { canonical: "https://www.spinkudlu.com/about" },
+  openGraph: { url: "https://www.spinkudlu.com/about" },
 };
 
 const TEAM = [

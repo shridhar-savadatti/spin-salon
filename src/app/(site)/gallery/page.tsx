@@ -7,8 +7,8 @@ import PageAnalytics from "@/components/PageAnalytics";
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Browse our salon gallery — haircuts, coloring, skincare, nails, and bridal transformations at Spin Unisex Salon Bengaluru.",
-  alternates: { canonical: "https://spinkudlu.com/gallery" },
-  openGraph: { url: "https://spinkudlu.com/gallery" },
+  alternates: { canonical: "https://www.spinkudlu.com/gallery" },
+  openGraph: { url: "https://www.spinkudlu.com/gallery" },
 };
 
 const GALLERY = [

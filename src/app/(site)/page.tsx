@@ -8,7 +8,7 @@ import PageAnalytics from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
   title: "Spin Unisex Salon — Premium Hair & Beauty in Bengaluru",
-  alternates: { canonical: "https://spinkudlu.com" },
+  alternates: { canonical: "https://www.spinkudlu.com" },
 };
 
 export default function HomePage() {
