@@ -61,12 +61,23 @@ export default function AdminAppointmentsPage() {
     setUpdating(null);
     load();
 
-    // Open WhatsApp to notify customer when confirming
-    if (status === "confirmed" && appointment) {
+    // Send WhatsApp notification to customer
+    if (appointment && (status === "confirmed" || status === "cancelled" || status === "completed")) {
       const digits = appointment.customerPhone.replace(/\D/g, "");
       const phone = digits.length === 10 ? `91${digits}` : digits;
-      const msg = `Hi ${appointment.customerName.split(" ")[0]}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}\n\nSee you soon! 😊`;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      const name = appointment.customerName.split(" ")[0];
+      const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}`;
+
+      let msg = "";
+      if (status === "confirmed") {
+        msg = `Hi ${name}! ✅ Your appointment at Spin Unisex Salon is *confirmed*.${details}\n\nSee you soon! 😊`;
+      } else if (status === "cancelled") {
+        msg = `Hi ${name}! ❌ Your appointment at Spin Unisex Salon has been *cancelled*.${details}\n\nWe're sorry for the inconvenience. Please call us to reschedule:\n📞 +91 91643 63131`;
+      } else if (status === "completed") {
+        msg = `Hi ${name}! 🙏 Thank you for visiting Spin Unisex Salon!\n\nWe hope you loved your ${appointment.serviceName}. We'd love to see you again! Book your next appointment at spinkudlu.com`;
+      }
+
+      if (msg) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
     }
   };
 
@@ -166,11 +177,11 @@ export default function AdminAppointmentsPage() {
                                   className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-50">Confirm</button>
                               )}
                               {a.status === "confirmed" && (
-                                <button onClick={() => updateStatus(a.id, "completed")} disabled={updating === a.id}
+                                <button onClick={() => updateStatus(a.id, "completed", a)} disabled={updating === a.id}
                                   className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-100 disabled:opacity-50">Complete</button>
                               )}
                               {a.status !== "cancelled" && a.status !== "completed" && (
-                                <button onClick={() => updateStatus(a.id, "cancelled")} disabled={updating === a.id}
+                                <button onClick={() => updateStatus(a.id, "cancelled", a)} disabled={updating === a.id}
                                   className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">Cancel</button>
                               )}
                             </div>
