@@ -73,7 +73,24 @@ function BookingForm() {
     setLoadingSlots(true);
     setTime("");
     const url = staffId ? `/api/slots?date=${date}&staffId=${staffId}` : `/api/slots?date=${date}`;
-    fetch(url).then(r => r.json()).then(data => { setSlots(data); setLoadingSlots(false); });
+    fetch(url).then(r => r.json()).then((data: TimeSlot[]) => {
+      // For today: hide slots within 1 hour of current time
+      const today = new Date().toISOString().split("T")[0];
+      if (date === today) {
+        const now = new Date();
+        const cutoff = new Date(now.getTime() + 60 * 60 * 1000); // now + 1 hour
+        const cutoffMins = cutoff.getHours() * 60 + cutoff.getMinutes();
+        const filtered = data.map(slot => {
+          const [h, m] = slot.time.split(":").map(Number);
+          const slotMins = h * 60 + m;
+          return slotMins < cutoffMins ? { ...slot, isAvailable: false } : slot;
+        });
+        setSlots(filtered);
+      } else {
+        setSlots(data);
+      }
+      setLoadingSlots(false);
+    });
   }, [date, staffId]);
 
   const handleBooking = async () => {
