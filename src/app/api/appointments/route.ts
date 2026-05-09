@@ -87,6 +87,15 @@ export async function POST(req: NextRequest) {
     const createdAt = new Date().toISOString();
     const actualFinalPrice = finalPrice ?? totalPrice;
 
+    // Ensure new columns exist (safe on repeated calls)
+    try {
+      await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS services_json TEXT`;
+      await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS total_duration INTEGER DEFAULT 0`;
+      await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_code TEXT`;
+      await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_amount DECIMAL DEFAULT 0`;
+      await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS final_price DECIMAL`;
+    } catch { /* already exist */ }
+
     await sql`
       INSERT INTO appointments (
         id, customer_name, customer_phone, service_id, service_name, service_price,
@@ -105,7 +114,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id, staffName, totalPrice, totalDuration, services, message: "Appointment booked successfully" }, { status: 201 });
   } catch (err) {
-    console.error("Appointment booking error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Appointment booking error:", msg);
+    // Return the actual error so we can debug
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
