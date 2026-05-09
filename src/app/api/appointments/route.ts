@@ -3,6 +3,7 @@ import { getSql } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { SERVICES } from "@/lib/services-data";
 import { SelectedService } from "@/types";
+import { sendBookingNotificationToAdmin } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,22 @@ export async function POST(req: NextRequest) {
     if (discountCode) {
       await sql`UPDATE offers SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER(${discountCode})`;
     }
+
+    // Send email notification to admin (runs in background, won't block response)
+    sendBookingNotificationToAdmin({
+      bookingId: id,
+      customerName,
+      customerPhone,
+      services,
+      date,
+      time,
+      staffName,
+      totalPrice,
+      totalDuration,
+      discountCode: discountCode || undefined,
+      finalPrice: actualFinalPrice,
+      notes: notes || undefined,
+    });
 
     return NextResponse.json({ id, staffName, totalPrice, totalDuration, services, message: "Appointment booked successfully" }, { status: 201 });
   } catch (err) {
