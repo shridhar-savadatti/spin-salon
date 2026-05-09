@@ -421,9 +421,8 @@ function BookingForm() {
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
               <CheckCircle size={40} className="text-green-600" />
             </div>
-            <h2 className="mb-2 text-3xl font-extrabold text-zinc-900">Booking Request Received!</h2>
-            <p className="mb-2 text-zinc-500">Your appointment request has been sent to Spin Unisex Salon.</p>
-            <p className="mb-8 text-sm text-amber-600 font-medium">⚠️ This is a request — our team will call or WhatsApp you on <span className="font-bold">{form.phone}</span> to confirm your slot.</p>
+            <h2 className="mb-2 text-3xl font-extrabold text-zinc-900">Booking Requested!</h2>
+            <p className="mb-8 text-lg font-bold text-zinc-800">We will reach out to confirm shortly.</p>
             <div className="mb-8 overflow-hidden rounded-2xl border-2 border-zinc-900">
               <div className="bg-zinc-900 px-6 py-3">
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Booking Summary</p>
