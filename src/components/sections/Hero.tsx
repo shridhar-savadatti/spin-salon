@@ -27,7 +27,7 @@ export default function Hero() {
         {/* Badge */}
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-zinc-200 backdrop-blur-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
-          New clients get 20% off their first visit
+          New clients get 20% off on services above ₹2000
         </div>
 
         {/* Spin logo mark */}
