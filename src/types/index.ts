@@ -21,6 +21,14 @@ export interface TimeSlot {
   isAvailable: boolean;
 }
 
+export interface SelectedService {
+  id: string;
+  name: string;
+  price: number;
+  duration: number;
+  category: string;
+}
+
 export interface Appointment {
   id: string;
   customerName: string;
@@ -28,13 +36,18 @@ export interface Appointment {
   serviceId: string;
   serviceName: string;
   servicePrice: number;
-  date: string; // "YYYY-MM-DD"
-  time: string; // "HH:MM"
+  date: string;
+  time: string;
   notes?: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   createdAt: string;
   staffId?: string;
   staffName?: string;
+  servicesJson?: string;
+  totalDuration?: number;
+  discountCode?: string;
+  discountAmount?: number;
+  finalPrice?: number;
 }
 
 export interface BookingFormData {

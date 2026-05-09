@@ -120,11 +120,13 @@ export async function initDb() {
     )
   `;
 
-  // Add discount columns to appointments if missing
+  // Add new columns to appointments if missing
   try {
     await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_code TEXT`;
     await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_amount DECIMAL DEFAULT 0`;
     await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS final_price DECIMAL`;
+    await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS services_json TEXT`;
+    await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS total_duration INTEGER DEFAULT 0`;
   } catch { /* columns already exist */ }
 
   // Only seed slots if missing — never bulk-delete at runtime (causes timeout)

@@ -12,6 +12,8 @@ interface Appointment {
   serviceId: string; serviceName: string; servicePrice: number;
   date: string; time: string; notes: string | null; status: string;
   createdAt: string; staffId: string | null; staffName: string | null;
+  servicesJson?: string | null; totalDuration?: number | null;
+  discountCode?: string | null; discountAmount?: number | null; finalPrice?: number | null;
 }
 interface Staff { id: string; name: string; role: string; }
 
@@ -21,7 +23,8 @@ function buildWaLink(appointment: Appointment, status: string): string {
   const digits = appointment.customerPhone.replace(/\D/g, "");
   const phone = digits.length === 10 ? `91${digits}` : digits;
   const name = appointment.customerName.split(" ")[0];
-  const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${appointment.serviceName}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}`;
+  const serviceDisplay = appointment.servicesJson ? (JSON.parse(appointment.servicesJson) as {name:string}[]).map(s=>s.name).join(', ') : appointment.serviceName;
+  const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${serviceDisplay}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ''}`;
 
   let msg = "";
   if (status === "confirmed") {
@@ -60,6 +63,8 @@ export default function AdminAppointmentsPage() {
           serviceId: a.service_id, serviceName: a.service_name, servicePrice: a.service_price,
           date: a.date, time: a.time, notes: a.notes, status: a.status,
           createdAt: a.created_at, staffId: a.staff_id, staffName: a.staff_name,
+          servicesJson: a.services_json, totalDuration: a.total_duration,
+          discountCode: a.discount_code, discountAmount: a.discount_amount, finalPrice: a.final_price,
         })));
       }
       if (r2.ok) setStaff(await r2.json());
@@ -168,7 +173,18 @@ export default function AdminAppointmentsPage() {
                             <p className="text-xs text-zinc-400">{a.customerPhone}</p>
                             {a.notes && <p className="mt-0.5 text-xs italic text-zinc-400">"{a.notes}"</p>}
                           </td>
-                          <td className="px-4 py-3 text-zinc-700">{a.serviceName}</td>
+                          <td className="px-4 py-3">
+                            {a.servicesJson ? (
+                              <div>
+                                {(JSON.parse(a.servicesJson) as {name:string;price:number}[]).map((s,i) => (
+                                  <p key={i} className="text-xs text-zinc-700">{s.name} — ₹{s.price}</p>
+                                ))}
+                                {a.discountCode && <p className="text-xs text-green-600 mt-0.5">🏷 {a.discountCode}</p>}
+                              </div>
+                            ) : (
+                              <p className="text-zinc-700">{a.serviceName}</p>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-zinc-700">{a.staffName || "—"}</td>
                           <td className="px-4 py-3">
                             <p className="text-zinc-900">{formatDate(a.date)}</p>

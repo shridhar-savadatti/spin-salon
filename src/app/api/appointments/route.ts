@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { SERVICES } from "@/lib/services-data";
-import { BookingFormData } from "@/types";
+import { SelectedService } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -10,25 +10,48 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date");
   const sql = getSql();
-
   const rows = date
     ? await sql`SELECT * FROM appointments WHERE date = ${date} ORDER BY time ASC`
     : await sql`SELECT * FROM appointments ORDER BY date DESC, time ASC`;
-
   return NextResponse.json(rows);
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body: BookingFormData = await req.json();
-    const { customerName, customerPhone, serviceId, date, time, notes, staffId, discountCode, discountAmount, finalPrice } = body as typeof body & { discountCode?: string; discountAmount?: number; finalPrice?: number };
+    const body = await req.json();
+    const {
+      customerName, customerPhone, date, time, notes, staffId,
+      discountCode, discountAmount, finalPrice,
+      // Multi-service support
+      selectedServices, serviceId,
+    } = body as {
+      customerName: string; customerPhone: string; date: string; time: string;
+      notes?: string; staffId?: string; discountCode?: string;
+      discountAmount?: number; finalPrice?: number;
+      selectedServices?: SelectedService[]; serviceId?: string;
+    };
 
-    if (!customerName || !customerPhone || !serviceId || !date || !time) {
+    if (!customerName || !customerPhone || !date || !time) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const service = SERVICES.find(s => s.id === serviceId);
-    if (!service) return NextResponse.json({ error: "Invalid service" }, { status: 400 });
+    // Support both multi-service and single-service bookings
+    let services: SelectedService[] = [];
+    if (selectedServices && selectedServices.length > 0) {
+      services = selectedServices;
+    } else if (serviceId) {
+      const s = SERVICES.find(sv => sv.id === serviceId);
+      if (!s) return NextResponse.json({ error: "Invalid service" }, { status: 400 });
+      services = [{ id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
+    } else {
+      return NextResponse.json({ error: "No services selected" }, { status: 400 });
+    }
+
+    const primaryService = services[0];
+    const totalPrice = services.reduce((sum, s) => sum + s.price, 0);
+    const totalDuration = services.reduce((sum, s) => sum + s.duration, 0);
+    const serviceNames = services.map(s => s.name).join(", ");
+    const servicesJson = JSON.stringify(services);
 
     const sql = getSql();
     let staffName: string | null = null;
@@ -62,20 +85,27 @@ export async function POST(req: NextRequest) {
 
     const id = generateId();
     const createdAt = new Date().toISOString();
+    const actualFinalPrice = finalPrice ?? totalPrice;
 
     await sql`
-      INSERT INTO appointments (id, customer_name, customer_phone, service_id, service_name, service_price, date, time, notes, status, created_at, staff_id, staff_name, discount_code, discount_amount, final_price)
-      VALUES (${id}, ${customerName}, ${customerPhone}, ${serviceId}, ${service.name}, ${service.price}, ${date}, ${time}, ${notes || null}, 'pending', ${createdAt}, ${resolvedStaffId}, ${staffName}, ${discountCode || null}, ${discountAmount || 0}, ${finalPrice || service.price})
+      INSERT INTO appointments (
+        id, customer_name, customer_phone, service_id, service_name, service_price,
+        date, time, notes, status, created_at, staff_id, staff_name,
+        discount_code, discount_amount, final_price, services_json, total_duration
+      ) VALUES (
+        ${id}, ${customerName}, ${customerPhone}, ${primaryService.id}, ${serviceNames}, ${totalPrice},
+        ${date}, ${time}, ${notes || null}, 'pending', ${createdAt}, ${resolvedStaffId}, ${staffName},
+        ${discountCode || null}, ${discountAmount || 0}, ${actualFinalPrice}, ${servicesJson}, ${totalDuration}
+      )
     `;
 
-    // Increment offer uses count
     if (discountCode) {
       await sql`UPDATE offers SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER(${discountCode})`;
     }
 
-    return NextResponse.json({ id, staffName, message: "Appointment booked successfully" }, { status: 201 });
+    return NextResponse.json({ id, staffName, totalPrice, totalDuration, services, message: "Appointment booked successfully" }, { status: 201 });
   } catch (err) {
-    console.error(err);
+    console.error("Appointment booking error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
