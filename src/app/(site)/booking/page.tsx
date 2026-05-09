@@ -8,8 +8,8 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { SERVICES, SERVICE_CATEGORIES } from "@/lib/services-data";
 import { formatCurrency, formatDate, formatTime, getDateRange, buildWhatsAppUrl } from "@/lib/utils";
-import { TimeSlot, Staff } from "@/types";
-import { CheckCircle, Clock, ChevronRight, Search, X, ArrowLeft } from "lucide-react";
+import { TimeSlot, Staff, AppliedOffer } from "@/types";
+import { CheckCircle, Clock, ChevronRight, Search, X, ArrowLeft, Tag, Loader } from "lucide-react";
 import PageAnalytics from "@/components/PageAnalytics";
 
 const WHATSAPP_NUMBER = "919164363131";
@@ -50,6 +50,10 @@ function BookingForm() {
   const [bookingId, setBookingId] = useState("");
   const [confirmedStaffName, setConfirmedStaffName] = useState("");
   const [error, setError] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedOffer, setAppliedOffer] = useState<AppliedOffer | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   const banner = CATEGORY_BANNERS[activeCategory];
   const filteredServices = SERVICES.filter(s =>
@@ -93,6 +97,37 @@ function BookingForm() {
     });
   }, [date, staffId]);
 
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    if (!form.phone) { setPromoError("Enter your phone number first"); return; }
+    setPromoLoading(true);
+    setPromoError("");
+    setAppliedOffer(null);
+    try {
+      const res = await fetch("/api/validate-offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode,
+          phone: form.phone,
+          servicePrice: selectedService?.price || 0,
+          category: activeCategory,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setPromoError(data.error); }
+      else {
+        setAppliedOffer({
+          code: data.code,
+          description: data.description,
+          discountAmount: data.discountAmount,
+          finalPrice: data.finalPrice,
+        });
+      }
+    } catch { setPromoError("Could not apply code. Try again."); }
+    finally { setPromoLoading(false); }
+  };
+
   const handleBooking = async () => {
     if (!form.name || !form.phone) { setError("Please fill in your name and phone number."); return; }
     setSubmitting(true);
@@ -101,7 +136,13 @@ function BookingForm() {
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerName: form.name, customerPhone: form.phone, serviceId, date, time, notes: form.notes, staffId: staffId || undefined }),
+        body: JSON.stringify({
+          customerName: form.name, customerPhone: form.phone, serviceId, date, time,
+          notes: form.notes, staffId: staffId || undefined,
+          discountCode: appliedOffer?.code || undefined,
+          discountAmount: appliedOffer?.discountAmount || 0,
+          finalPrice: appliedOffer?.finalPrice || selectedService?.price,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Booking failed");
@@ -131,6 +172,7 @@ function BookingForm() {
     setStep(1); setServiceId(""); setStaffId(""); setDate(""); setTime("");
     setForm({ name: "", phone: "", notes: "" }); setBookingId(""); setConfirmedStaffName("");
     setActiveCategory(SERVICE_CATEGORIES[0]); setSearch("");
+    setPromoCode(""); setAppliedOffer(null); setPromoError("");
   };
 
   // Sticky footer content per step
@@ -416,6 +458,44 @@ function BookingForm() {
                   className="w-full rounded-xl border-2 border-zinc-200 px-4 py-2.5 text-zinc-900 placeholder-zinc-400 transition focus:border-zinc-900 focus:outline-none" />
               </div>
             </div>
+            {/* Promo Code */}
+            <div className="mt-4 rounded-xl border-2 border-zinc-200 p-4">
+              <p className="mb-2 text-sm font-semibold text-zinc-700 flex items-center gap-1.5"><Tag size={14} /> Promo Code</p>
+              {appliedOffer ? (
+                <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-green-700">✅ {appliedOffer.code} applied!</p>
+                      <p className="text-xs text-green-600">You save {formatCurrency(appliedOffer.discountAmount)}</p>
+                    </div>
+                    <button onClick={() => { setAppliedOffer(null); setPromoCode(""); }}
+                      className="text-xs text-zinc-400 hover:text-red-500 transition">Remove</button>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-green-200 flex justify-between text-sm">
+                    <span className="text-zinc-500 line-through">{formatCurrency(selectedService?.price || 0)}</span>
+                    <span className="font-bold text-green-700">{formatCurrency(appliedOffer.finalPrice)}*</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input value={promoCode} onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); }}
+                    placeholder="Enter promo code"
+                    className="flex-1 rounded-xl border-2 border-zinc-200 px-4 py-2.5 text-sm font-mono font-bold uppercase text-zinc-900 placeholder:font-normal placeholder:normal-case focus:border-zinc-900 focus:outline-none" />
+                  <button onClick={applyPromoCode} disabled={promoLoading || !promoCode.trim()}
+                    className="shrink-0 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:opacity-50 flex items-center gap-1">
+                    {promoLoading ? <Loader size={14} className="animate-spin" /> : "Apply"}
+                  </button>
+                </div>
+              )}
+              {promoError && <p className="mt-2 text-xs text-red-500">{promoError}</p>}
+            </div>
+
+            {/* Price summary */}
+            <div className="mt-3 flex justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm font-semibold">
+              <span className="text-zinc-600">Total to pay at salon</span>
+              <span className="text-zinc-900">{formatCurrency(appliedOffer?.finalPrice ?? selectedService?.price ?? 0)}*</span>
+            </div>
+
             {error && <p className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600">{error}</p>}
           </div>
         )}
@@ -441,7 +521,11 @@ function BookingForm() {
                   { label: "Time", value: formatTime(time) },
                   { label: "Name", value: form.name },
                   { label: "Phone", value: form.phone },
-                  { label: "Price", value: `${formatCurrency(selectedService?.price || 0)}*` },
+                  { label: "Service Price", value: `${formatCurrency(selectedService?.price || 0)}*` },
+                  ...(appliedOffer ? [
+                    { label: `Discount (${appliedOffer.code})`, value: `-${formatCurrency(appliedOffer.discountAmount)}` },
+                    { label: "Total to Pay", value: `${formatCurrency(appliedOffer.finalPrice)}*` },
+                  ] : []),
                 ].map(item => (
                   <div key={item.label} className="flex justify-between gap-4 py-2.5 text-sm">
                     <dt className="text-zinc-500">{item.label}</dt>

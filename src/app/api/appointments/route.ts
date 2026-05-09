@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body: BookingFormData = await req.json();
-    const { customerName, customerPhone, serviceId, date, time, notes, staffId } = body;
+    const { customerName, customerPhone, serviceId, date, time, notes, staffId, discountCode, discountAmount, finalPrice } = body as typeof body & { discountCode?: string; discountAmount?: number; finalPrice?: number };
 
     if (!customerName || !customerPhone || !serviceId || !date || !time) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -64,9 +64,14 @@ export async function POST(req: NextRequest) {
     const createdAt = new Date().toISOString();
 
     await sql`
-      INSERT INTO appointments (id, customer_name, customer_phone, service_id, service_name, service_price, date, time, notes, status, created_at, staff_id, staff_name)
-      VALUES (${id}, ${customerName}, ${customerPhone}, ${serviceId}, ${service.name}, ${service.price}, ${date}, ${time}, ${notes || null}, 'pending', ${createdAt}, ${resolvedStaffId}, ${staffName})
+      INSERT INTO appointments (id, customer_name, customer_phone, service_id, service_name, service_price, date, time, notes, status, created_at, staff_id, staff_name, discount_code, discount_amount, final_price)
+      VALUES (${id}, ${customerName}, ${customerPhone}, ${serviceId}, ${service.name}, ${service.price}, ${date}, ${time}, ${notes || null}, 'pending', ${createdAt}, ${resolvedStaffId}, ${staffName}, ${discountCode || null}, ${discountAmount || 0}, ${finalPrice || service.price})
     `;
+
+    // Increment offer uses count
+    if (discountCode) {
+      await sql`UPDATE offers SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER(${discountCode})`;
+    }
 
     return NextResponse.json({ id, staffName, message: "Appointment booked successfully" }, { status: 201 });
   } catch (err) {

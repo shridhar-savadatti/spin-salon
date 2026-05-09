@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Calendar, Settings, BarChart2, LogOut, FileText, Megaphone, Menu, X } from "lucide-react";
+import { Calendar, Settings, BarChart2, LogOut, FileText, Megaphone, Menu, X, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -13,6 +13,7 @@ const STORE_ITEMS = [
   { href: "/admin/appointments", label: "Appointments", icon: Calendar },
   { href: "/admin/slots", label: "Manage Slots", icon: Settings },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
+  { href: "/admin/offers", label: "Promo Offers", icon: Tag },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
 ];
 

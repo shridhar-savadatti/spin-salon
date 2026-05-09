@@ -62,6 +62,29 @@ export interface Testimonial {
   avatar?: string;
 }
 
+export interface Offer {
+  id: string;
+  code: string;
+  description: string;
+  discountType: "percentage" | "flat";
+  discountValue: number;
+  minOrder: number;
+  validFor: "all" | "new";
+  categoryFilter: string | null;
+  maxUses: number | null;
+  usesCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AppliedOffer {
+  code: string;
+  description: string;
+  discountAmount: number;
+  finalPrice: number;
+}
+
 export interface Campaign {
   id: string;
   name: string;

@@ -88,6 +88,24 @@ export async function initDb() {
   `;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS offers (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      description TEXT,
+      discount_type TEXT NOT NULL DEFAULT 'percentage',
+      discount_value DECIMAL NOT NULL,
+      min_order DECIMAL NOT NULL DEFAULT 0,
+      valid_for TEXT NOT NULL DEFAULT 'all',
+      category_filter TEXT,
+      max_uses INTEGER,
+      uses_count INTEGER NOT NULL DEFAULT 0,
+      expires_at TEXT,
+      is_active SMALLINT NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS blog_posts (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -101,6 +119,13 @@ export async function initDb() {
       updated_at TEXT NOT NULL
     )
   `;
+
+  // Add discount columns to appointments if missing
+  try {
+    await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_code TEXT`;
+    await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_amount DECIMAL DEFAULT 0`;
+    await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS final_price DECIMAL`;
+  } catch { /* columns already exist */ }
 
   // Only seed slots if missing — never bulk-delete at runtime (causes timeout)
   const slotCount = await sql`SELECT COUNT(*) as c FROM time_slots`;
