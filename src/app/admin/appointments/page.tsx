@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { formatDate, formatTime, formatCurrency } from "@/lib/utils";
-import { Search, RefreshCw, MessageCircle } from "lucide-react";
+import { formatTime, formatCurrency } from "@/lib/utils";
+import { Search, RefreshCw, MessageCircle, Calendar } from "lucide-react";
 
 interface Appointment {
   id: string; customerName: string; customerPhone: string;
@@ -19,12 +19,24 @@ interface Staff { id: string; name: string; role: string; }
 
 const STATUSES = ["all", "pending", "confirmed", "completed", "cancelled"];
 
+function formatDateLabel(dateStr: string): string {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const today = new Date().toISOString().split("T")[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+  if (dateStr === today) return "📅 Today";
+  if (dateStr === tomorrow) return "📅 Tomorrow";
+  const [year, month, day] = dateStr.split("-");
+  return `📅 ${parseInt(day)} ${months[parseInt(month) - 1]} ${year}`;
+}
+
 function buildWaLink(appointment: Appointment, status: string): string {
   const digits = appointment.customerPhone.replace(/\D/g, "");
   const phone = digits.length === 10 ? `91${digits}` : digits;
   const name = appointment.customerName.split(" ")[0];
-  const serviceDisplay = appointment.servicesJson ? (JSON.parse(appointment.servicesJson) as {name:string}[]).map(s=>s.name).join(', ') : appointment.serviceName;
-  const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${serviceDisplay}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ''}`;
+  const serviceDisplay = appointment.servicesJson
+    ? (JSON.parse(appointment.servicesJson) as { name: string }[]).map(s => s.name).join(", ")
+    : appointment.serviceName;
+  const details = `\n\n📅 ${appointment.date}\n⏰ ${appointment.time}\n💇 ${serviceDisplay}${appointment.staffName ? `\n👤 Stylist: ${appointment.staffName}` : ""}`;
 
   let msg = "";
   if (status === "confirmed") {
@@ -32,7 +44,7 @@ function buildWaLink(appointment: Appointment, status: string): string {
   } else if (status === "cancelled") {
     msg = `Hi ${name}! ❌ Your appointment at *Spin Unisex Salon, Kudlu Bengaluru* has been cancelled.${details}\n\nWe're sorry. Please call us to reschedule:\n📞 +91 91643 63131`;
   } else if (status === "completed") {
-    msg = `Hi ${name}! 🙏 Thank you for visiting *Spin Unisex Salon, Kudlu Bengaluru*!\n\nWe hope you loved your ${appointment.serviceName}. See you again! Book at spinkudlu.com`;
+    msg = `Hi ${name}! 🙏 Thank you for visiting *Spin Unisex Salon, Kudlu Bengaluru*!\n\nWe hope you loved your ${serviceDisplay}. See you again! Book at spinkudlu.com`;
   }
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
@@ -45,7 +57,6 @@ export default function AdminAppointmentsPage() {
   const [staffFilter, setStaffFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
-  // Track pending WhatsApp notifications: { appointmentId -> { status, waLink } }
   const [pendingWa, setPendingWa] = useState<Record<string, { status: string; waLink: string }>>({});
 
   const load = useCallback(async () => {
@@ -58,14 +69,19 @@ export default function AdminAppointmentsPage() {
       ]);
       if (r1.ok) {
         const raw = await r1.json();
-        setAppointments(raw.map((a: Record<string, unknown>) => ({
+        // Sort: upcoming dates first (ASC), then time ASC within each date
+        const sorted = raw.map((a: Record<string, unknown>) => ({
           id: a.id, customerName: a.customer_name, customerPhone: a.customer_phone,
           serviceId: a.service_id, serviceName: a.service_name, servicePrice: a.service_price,
           date: a.date, time: a.time, notes: a.notes, status: a.status,
           createdAt: a.created_at, staffId: a.staff_id, staffName: a.staff_name,
           servicesJson: a.services_json, totalDuration: a.total_duration,
           discountCode: a.discount_code, discountAmount: a.discount_amount, finalPrice: a.final_price,
-        })));
+        })).sort((a: Appointment, b: Appointment) => {
+          if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          return a.time < b.time ? -1 : 1;
+        });
+        setAppointments(sorted);
       }
       if (r2.ok) setStaff(await r2.json());
     } finally {
@@ -84,13 +100,8 @@ export default function AdminAppointmentsPage() {
     });
     setUpdating(null);
     load();
-
-    // Store pending WhatsApp notification — user taps the button directly
     if (status === "confirmed" || status === "cancelled" || status === "completed") {
-      setPendingWa(prev => ({
-        ...prev,
-        [id]: { status, waLink: buildWaLink(appointment, status) },
-      }));
+      setPendingWa(prev => ({ ...prev, [id]: { status, waLink: buildWaLink(appointment, status) } }));
     }
   };
 
@@ -109,10 +120,98 @@ export default function AdminAppointmentsPage() {
     return acc;
   }, {} as Record<string, number>);
 
+  // Group filtered appointments by date
+  const today = new Date().toISOString().split("T")[0];
+  const grouped = filtered.reduce((acc, a) => {
+    if (!acc[a.date]) acc[a.date] = [];
+    acc[a.date].push(a);
+    return acc;
+  }, {} as Record<string, Appointment[]>);
+  const sortedDates = Object.keys(grouped).sort();
+  const upcomingDates = sortedDates.filter(d => d >= today);
+  const pastDates = sortedDates.filter(d => d < today).reverse(); // most recent past first
+
+  const renderAppointmentCard = (a: Appointment) => (
+    <div key={a.id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-zinc-300 hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
+        {/* Left: customer + service */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-bold text-zinc-900">{a.customerName}</p>
+            <Badge status={a.status} />
+            {a.discountCode && (
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                🏷 {a.discountCode}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-xs text-zinc-400">{a.customerPhone}</p>
+
+          {/* Services */}
+          <div className="mt-2">
+            {a.servicesJson ? (
+              <div className="space-y-0.5">
+                {(JSON.parse(a.servicesJson) as { name: string; price: number }[]).map((s, i) => (
+                  <p key={i} className="text-sm text-zinc-700">{s.name} <span className="text-zinc-400">₹{s.price}</span></p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-700">{a.serviceName}</p>
+            )}
+            {a.notes && <p className="mt-1 text-xs italic text-zinc-400">"{a.notes}"</p>}
+          </div>
+        </div>
+
+        {/* Right: time + stylist + price */}
+        <div className="shrink-0 text-right">
+          <p className="text-lg font-bold text-zinc-900">{formatTime(a.time)}</p>
+          <p className="text-xs text-zinc-500">{a.staffName || "Any stylist"}</p>
+          <p className="mt-1 text-sm font-semibold text-zinc-900">
+            {formatCurrency(a.finalPrice ?? a.servicePrice)}
+          </p>
+          {a.totalDuration && a.totalDuration > 0 && (
+            <p className="text-xs text-zinc-400">~{a.totalDuration} mins</p>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-zinc-100 pt-3">
+        {a.status === "pending" && (
+          <button onClick={() => updateStatus(a.id, "confirmed", a)} disabled={updating === a.id}
+            className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 disabled:opacity-50">
+            ✓ Confirm
+          </button>
+        )}
+        {a.status === "confirmed" && (
+          <button onClick={() => updateStatus(a.id, "completed", a)} disabled={updating === a.id}
+            className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600 hover:bg-green-100 disabled:opacity-50">
+            ✓ Complete
+          </button>
+        )}
+        {a.status !== "cancelled" && a.status !== "completed" && (
+          <button onClick={() => updateStatus(a.id, "cancelled", a)} disabled={updating === a.id}
+            className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
+            ✕ Cancel
+          </button>
+        )}
+        {pendingWa[a.id] && (
+          <a href={pendingWa[a.id].waLink} target="_blank" rel="noopener noreferrer"
+            onClick={() => setPendingWa(prev => { const n = { ...prev }; delete n[a.id]; return n; })}
+            className="flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700">
+            <MessageCircle size={11} />
+            Notify {pendingWa[a.id].status === "confirmed" ? "✅" : pendingWa[a.id].status === "cancelled" ? "❌" : "🙏"}
+          </a>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen">
       <AdminNav />
       <div className="flex-1 p-4 md:p-8">
+        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-zinc-900">
             Appointments {!loading && <span className="text-base font-normal text-zinc-400">({appointments.length})</span>}
@@ -126,6 +225,7 @@ export default function AdminAppointmentsPage() {
           <div className="py-20 text-center text-zinc-400">Loading appointments...</div>
         ) : (
           <>
+            {/* Status filter pills */}
             <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
               {STATUSES.map(s => (
                 <button key={s} onClick={() => setFilter(s)}
@@ -136,7 +236,8 @@ export default function AdminAppointmentsPage() {
               ))}
             </div>
 
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+            {/* Search + stylist */}
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row">
               <div className="flex flex-1 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5">
                 <Search size={16} className="shrink-0 text-zinc-400" />
                 <input value={search} onChange={e => setSearch(e.target.value)}
@@ -155,83 +256,44 @@ export default function AdminAppointmentsPage() {
                 No appointments match this filter.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-zinc-100 bg-zinc-50">
-                      <tr>
-                        {["Client", "Service", "Stylist", "Date & Time", "Price", "Status", "Actions"].map(h => (
-                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-50">
-                      {filtered.map(a => (
-                        <tr key={a.id} className="hover:bg-zinc-50">
-                          <td className="px-4 py-3">
-                            <p className="font-semibold text-zinc-900">{a.customerName}</p>
-                            <p className="text-xs text-zinc-400">{a.customerPhone}</p>
-                            {a.notes && <p className="mt-0.5 text-xs italic text-zinc-400">"{a.notes}"</p>}
-                          </td>
-                          <td className="px-4 py-3">
-                            {a.servicesJson ? (
-                              <div>
-                                {(JSON.parse(a.servicesJson) as {name:string;price:number}[]).map((s,i) => (
-                                  <p key={i} className="text-xs text-zinc-700">{s.name} — ₹{s.price}</p>
-                                ))}
-                                {a.discountCode && <p className="text-xs text-green-600 mt-0.5">🏷 {a.discountCode}</p>}
-                              </div>
-                            ) : (
-                              <p className="text-zinc-700">{a.serviceName}</p>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-zinc-700">{a.staffName || "—"}</td>
-                          <td className="px-4 py-3">
-                            <p className="text-zinc-900">{formatDate(a.date)}</p>
-                            <p className="text-xs text-zinc-400">{formatTime(a.time)}</p>
-                          </td>
-                          <td className="px-4 py-3 font-medium text-zinc-900">{formatCurrency(a.servicePrice)}</td>
-                          <td className="px-4 py-3"><Badge status={a.status} /></td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              {a.status === "pending" && (
-                                <button onClick={() => updateStatus(a.id, "confirmed", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-50">
-                                  Confirm
-                                </button>
-                              )}
-                              {a.status === "confirmed" && (
-                                <button onClick={() => updateStatus(a.id, "completed", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-100 disabled:opacity-50">
-                                  Complete
-                                </button>
-                              )}
-                              {a.status !== "cancelled" && a.status !== "completed" && (
-                                <button onClick={() => updateStatus(a.id, "cancelled", a)} disabled={updating === a.id}
-                                  className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">
-                                  Cancel
-                                </button>
-                              )}
-                              {/* WhatsApp notify button — appears after action, direct tap = no popup block */}
-                              {pendingWa[a.id] && (
-                                <a
-                                  href={pendingWa[a.id].waLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={() => setPendingWa(prev => { const n = {...prev}; delete n[a.id]; return n; })}
-                                  className="flex items-center gap-1 rounded-lg bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700"
-                                >
-                                  <MessageCircle size={11} />
-                                  Notify {pendingWa[a.id].status === "confirmed" ? "✅" : pendingWa[a.id].status === "cancelled" ? "❌" : "🙏"}
-                                </a>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+              <div className="space-y-8">
+
+                {/* Upcoming dates */}
+                {upcomingDates.map(date => (
+                  <div key={date}>
+                    <div className="mb-3 flex items-center gap-3">
+                      <h2 className={`text-sm font-extrabold uppercase tracking-wider ${date === today ? "text-zinc-900" : "text-zinc-500"}`}>
+                        {formatDateLabel(date)}
+                      </h2>
+                      <div className="flex-1 h-px bg-zinc-200" />
+                      <span className="text-xs text-zinc-400">{grouped[date].length} booking{grouped[date].length > 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="space-y-3">
+                      {grouped[date].map(renderAppointmentCard)}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Past dates (collapsed style) */}
+                {pastDates.length > 0 && (
+                  <div>
+                    <div className="mb-3 flex items-center gap-3">
+                      <h2 className="text-sm font-extrabold uppercase tracking-wider text-zinc-400">Past</h2>
+                      <div className="flex-1 h-px bg-zinc-100" />
+                    </div>
+                    <div className="space-y-8">
+                      {pastDates.map(date => (
+                        <div key={date}>
+                          <p className="mb-2 text-xs font-semibold text-zinc-400">{formatDateLabel(date)}</p>
+                          <div className="space-y-3 opacity-60">
+                            {grouped[date].map(renderAppointmentCard)}
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
           </>
