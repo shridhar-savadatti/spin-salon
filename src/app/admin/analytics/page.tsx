@@ -20,6 +20,9 @@ export default async function AdminAnalyticsPage() {
   });
 
   const revenueRows = await sql`SELECT COALESCE(SUM(service_price), 0) as total FROM appointments WHERE status = 'completed'`;
+
+  const callClicks = await sql`SELECT COUNT(*) as c FROM analytics WHERE page = 'call-button'`;
+  const waClicks = await sql`SELECT COUNT(*) as c FROM analytics WHERE page = 'whatsapp-button'`;
   const revenue = parseInt((revenueRows[0] as { total: string }).total) || 0;
 
   const recentBookings = await sql`SELECT customer_name, service_name, date, status FROM appointments ORDER BY created_at DESC LIMIT 5`;
@@ -30,7 +33,7 @@ export default async function AdminAnalyticsPage() {
       <div className="flex-1 p-4 md:p-8">
         <h1 className="mb-8 text-2xl font-extrabold text-zinc-900">Analytics</h1>
 
-        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
           {[
             { label: "Total Bookings", value: counts.total, icon: Calendar, color: "bg-zinc-900 text-white" },
             { label: "Completed", value: counts.completed, icon: TrendingUp, color: "bg-green-50 text-green-700" },
@@ -58,7 +61,18 @@ export default async function AdminAnalyticsPage() {
               ) : (analyticsRows as { page: string; visits: string }[]).map(p => (
                 <div key={p.page}>
                   <div className="mb-1 flex justify-between text-sm">
-                    <span className="font-medium capitalize text-zinc-700">{p.page}</span>
+                    <span className="font-medium text-zinc-700">
+                      {p.page === "call-button" ? "📞 Call Button Clicks" :
+                       p.page === "whatsapp-button" ? "💬 WhatsApp Button Clicks" :
+                       p.page === "booking" ? "📅 Booking Page" :
+                       p.page === "home" ? "🏠 Home Page" :
+                       p.page === "services" ? "✂️ Services Page" :
+                       p.page === "gallery" ? "🖼️ Gallery Page" :
+                       p.page === "about" ? "ℹ️ About Page" :
+                       p.page === "contact" ? "📬 Contact Page" :
+                       p.page === "blog" ? "📝 Blog Page" :
+                       p.page.charAt(0).toUpperCase() + p.page.slice(1)}
+                    </span>
                     <span className="text-zinc-500">{p.visits}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-zinc-100">

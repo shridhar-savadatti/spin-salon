@@ -58,7 +58,12 @@ export default function Hero() {
           <Link href="/booking">
             <Button variant="light" size="lg">Book Your Appointment</Button>
           </Link>
-          <a href={`tel:${PHONE_NUMBER}`}>
+          <a href={`tel:${PHONE_NUMBER}`}
+            onClick={() => fetch("/api/analytics", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ page: "call-button" }),
+            }).catch(() => {})}>
             <Button variant="outline-light" size="lg">
               <Phone size={18} /> Call Now
             </Button>
@@ -67,6 +72,7 @@ export default function Hero() {
             href={buildWhatsAppUrl(WHATSAPP_NUMBER, "Hi! I'd like to learn more about your services.")}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: "whatsapp-button" }) }).catch(() => {})}
           >
             <Button variant="outline-light" size="lg">Chat on WhatsApp</Button>
           </a>
