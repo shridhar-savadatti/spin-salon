@@ -53,7 +53,7 @@ export default function AdminAppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("pending");
   const [staffFilter, setStaffFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
