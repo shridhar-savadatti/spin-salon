@@ -70,6 +70,14 @@ function BookingForm() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
   useEffect(() => { fetch("/api/staff").then(r => r.json()).then(setStaffList); }, []);
 
+  // Auto-scroll helper — scrolls an element into view smoothly
+  const scrollTo = (id: string) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
   useEffect(() => {
     if (!date) return;
     setLoadingSlots(true);
@@ -89,14 +97,18 @@ function BookingForm() {
         setSlots(data);
       }
       setLoadingSlots(false);
+      // After slots load, scroll to them
+      scrollTo("time-slots-section");
     });
   }, [date, staffId]);
 
   const toggleService = (s: typeof SERVICES[0]) => {
     setSelectedServices(prev => {
       const exists = prev.find(p => p.id === s.id);
-      if (exists) return prev.filter(p => p.id !== s.id);
-      return [...prev, { id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
+      const next = exists ? prev.filter(p => p.id !== s.id) : [...prev, { id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
+      // Scroll to selected summary when first service is added
+      if (!exists && prev.length === 0) scrollTo("selected-summary");
+      return next;
     });
     setAppliedOffer(null);
     setPromoError("");
@@ -147,6 +159,7 @@ function BookingForm() {
       setBookingId(data.id);
       setConfirmedStaffName(data.staffName || "");
       setStep(5);
+      scrollTo("booking-confirmed");
 
       // Notify admin
       const serviceList = selectedServices.map(s => `• ${s.name} (₹${s.price})`).join("\n");
@@ -267,7 +280,7 @@ function BookingForm() {
 
           {/* Selected summary */}
           {selectedServices.length > 0 && (
-            <div className="mb-4 rounded-xl bg-zinc-900 px-4 py-3">
+            <div id="selected-summary" className="mb-4 rounded-xl bg-zinc-900 px-4 py-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Selected ({selectedServices.length})</p>
               <div className="flex flex-wrap gap-2">
                 {selectedServices.map(s => (
@@ -371,7 +384,8 @@ function BookingForm() {
             </div>
             {date && (
               <div>
-                <p className="mb-3 text-sm font-semibold text-zinc-700">Available Times</p>
+                <div id="time-slots-section" />
+              <p className="mb-3 text-sm font-semibold text-zinc-700">Available Times</p>
                 {loadingSlots ? (
                   <div className="py-8 text-center text-zinc-400">Loading slots...</div>
                 ) : (
@@ -472,7 +486,7 @@ function BookingForm() {
 
         {/* Step 5: Confirmed */}
         {step === 5 && (
-          <div className="text-center">
+          <div id="booking-confirmed" className="text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
               <CheckCircle size={40} className="text-green-600" />
             </div>
