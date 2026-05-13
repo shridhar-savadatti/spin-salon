@@ -70,12 +70,15 @@ function BookingForm() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
   useEffect(() => { fetch("/api/staff").then(r => r.json()).then(setStaffList); }, []);
 
-  // Auto-scroll helper — scrolls an element into view smoothly
+  // Auto-scroll helper — accounts for fixed navbar (64px) + breathing room
   const scrollTo = (id: string) => {
     setTimeout(() => {
       const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      }
+    }, 150);
   };
 
   useEffect(() => {
