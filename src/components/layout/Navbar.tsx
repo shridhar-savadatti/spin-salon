@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -16,11 +17,23 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
+// Pages that have a dark hero — navbar starts transparent with white text
+const DARK_HERO_PAGES = ["/", "/services", "/gallery", "/about", "/contact", "/blog"];
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  // Pages without dark hero always show white navbar
+  const hasDarkHero = DARK_HERO_PAGES.some(p =>
+    p === "/" ? pathname === "/" : pathname?.startsWith(p)
+  );
+  const isWhite = !hasDarkHero || scrolled;
 
   useEffect(() => {
+    // Set initial scroll state
+    setScrolled(window.scrollY > 20);
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
@@ -30,13 +43,12 @@ export default function Navbar() {
     <header
       className={cn(
         "fixed top-0 z-50 w-full transition-all duration-300",
-        scrolled ? "bg-white/95 shadow-sm backdrop-blur-sm" : "bg-transparent"
+        isWhite ? "bg-white/95 shadow-sm backdrop-blur-sm" : "bg-transparent"
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          {/* Logo always on black background so the S-mark is visible */}
           <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-zinc-900 shadow-sm">
             <Image
               src="/images/spin-logo.png"
@@ -47,9 +59,9 @@ export default function Navbar() {
           </div>
           <span className={cn(
             "text-xl font-bold tracking-tight transition-colors duration-300",
-            scrolled ? "text-zinc-900" : "text-white"
+            isWhite ? "text-zinc-900" : "text-white"
           )}>
-            Spin <span className={scrolled ? "text-zinc-500" : "text-zinc-300"}>Unisex Salon</span>
+            Spin <span className={isWhite ? "text-zinc-500" : "text-zinc-300"}>Unisex Salon</span>
           </span>
         </Link>
 
@@ -61,7 +73,7 @@ export default function Navbar() {
               href={link.href}
               className={cn(
                 "text-sm font-medium transition-colors duration-300",
-                scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-zinc-300 hover:text-white"
+                isWhite ? "text-zinc-600 hover:text-zinc-900" : "text-zinc-300 hover:text-white"
               )}
             >
               {link.label}
@@ -72,7 +84,7 @@ export default function Navbar() {
         {/* CTA */}
         <div className="hidden md:block">
           <Link href="/booking">
-            {scrolled ? (
+            {isWhite ? (
               <Button size="sm">Book Appointment</Button>
             ) : (
               <Button size="sm" className="border border-white/50 bg-white/10 text-white backdrop-blur-sm hover:bg-white hover:text-zinc-900">
@@ -86,7 +98,7 @@ export default function Navbar() {
         <button
           className={cn(
             "rounded-lg p-2 transition-colors duration-300 md:hidden",
-            scrolled ? "text-zinc-600 hover:bg-zinc-100" : "text-white hover:bg-white/10"
+            isWhite ? "text-zinc-600 hover:bg-zinc-100" : "text-white hover:bg-white/10"
           )}
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
