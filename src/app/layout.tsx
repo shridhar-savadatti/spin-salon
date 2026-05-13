@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | Spin Unisex Salon Kudlu",
   },
   description:
-    "Book online at Spin Unisex Salon, Kudlu Gate Bengaluru. New clients get 20% off (use WELCOME20). Haircuts, colour, facials, waxing, nails & bridal packages. Near HSR Layout.",
+    "Spin Unisex Salon, Kudlu Gate, Bengaluru — Near HSR Layout. Book online! New clients get 20% off (use WELCOME20). Haircuts, colour, facials, waxing, nails & bridal packages.",
   keywords: ["unisex salon", "haircut", "hair coloring", "beauty", "balayage", "facial", "nails", "Bengaluru", "Bangalore", "Kudlu", "HSR Layout", "spin salon", "Karnataka"],
   alternates: { canonical: BASE_URL },
   openGraph: {
