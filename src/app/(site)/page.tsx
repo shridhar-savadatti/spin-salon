@@ -7,7 +7,7 @@ import BookingCTA from "@/components/sections/BookingCTA";
 import PageAnalytics from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
-  title: "Spin Unisex Salon — Premium Hair & Beauty in Bengaluru",
+  title: "Book Now – Spin Unisex Salon | Kudlu Gate, Bengaluru",
   alternates: { canonical: "https://www.spinkudlu.com" },
 };
 
