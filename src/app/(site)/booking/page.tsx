@@ -76,10 +76,11 @@ function BookingForm() {
     setTime("");
     const url = staffId ? `/api/slots?date=${date}&staffId=${staffId}` : `/api/slots?date=${date}`;
     fetch(url).then(r => r.json()).then((data: TimeSlot[]) => {
-      const today = new Date().toISOString().split("T")[0];
+      const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+      const today = istNow.toISOString().split("T")[0];
       if (date === today) {
-        const cutoff = new Date(Date.now() + 60 * 60 * 1000);
-        const cutoffMins = cutoff.getHours() * 60 + cutoff.getMinutes();
+        const cutoffIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000 + 60 * 60 * 1000);
+        const cutoffMins = cutoffIST.getUTCHours() * 60 + cutoffIST.getUTCMinutes();
         setSlots(data.map(slot => {
           const [h, m] = slot.time.split(":").map(Number);
           return h * 60 + m < cutoffMins ? { ...slot, isAvailable: false } : slot;

@@ -27,10 +27,15 @@ export function formatTime(time: string): string {
 
 export function getDateRange(days: number): string[] {
   const dates: string[] = [];
-  const today = new Date();
+  // Use IST (UTC+5:30) so dates are correct for Indian users
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(now.getTime() + istOffset);
+  const todayIST = istNow.toISOString().split("T")[0];
+
   for (let i = 0; i <= days; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+    const d = new Date(todayIST + "T00:00:00.000Z");
+    d.setUTCDate(d.getUTCDate() + i);
     dates.push(d.toISOString().split("T")[0]);
   }
   return dates;
