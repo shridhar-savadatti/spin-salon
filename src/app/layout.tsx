@@ -9,11 +9,11 @@ const BASE_URL = "https://www.spinkudlu.com";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Spin Unisex Salon | Online Booking | Kudlu, Bengaluru",
-    template: "%s | Spin Unisex Salon, Kudlu",
+    default: "Spin Unisex Salon | 20% Off First Visit | Book Online | Kudlu",
+    template: "%s | Spin Unisex Salon Kudlu",
   },
   description:
-    "Spin Unisex Salon, Kudlu Bengaluru — Online booking for haircuts, colouring, facials, nails, waxing & more. Unisex salon near HSR Layout. Book your appointment now!",
+    "Book online at Spin Unisex Salon, Kudlu Gate Bengaluru. New clients get 20% off (use WELCOME20). Haircuts, colour, facials, waxing, nails & bridal packages. Near HSR Layout.",
   keywords: ["unisex salon", "haircut", "hair coloring", "beauty", "balayage", "facial", "nails", "Bengaluru", "Bangalore", "Kudlu", "HSR Layout", "spin salon", "Karnataka"],
   alternates: { canonical: BASE_URL },
   openGraph: {
