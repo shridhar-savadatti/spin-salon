@@ -544,12 +544,8 @@ function BookingForm() {
 export default function BookingPage() {
   return (
     <>
-      <div className="bg-zinc-900 px-4 pt-32 pb-10 text-center">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-zinc-400">Reserve Your Spot</p>
-        <h1 className="text-4xl font-extrabold text-white sm:text-5xl">Book an Appointment</h1>
-        <p className="mx-auto mt-3 max-w-xl text-zinc-400">Select your services, pick a time, done in under 2 minutes.</p>
-      </div>
-      <section className="bg-zinc-50 pb-16 pt-6">
+      {/* pt-20 clears the fixed navbar, no hero text needed */}
+      <section className="bg-zinc-50 pb-16 pt-20">
         <Suspense fallback={<div className="py-16 text-center text-zinc-400">Loading...</div>}>
           <BookingForm />
         </Suspense>
