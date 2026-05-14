@@ -129,7 +129,7 @@ function BookingForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: promoCode, phone: form.phone, servicePrice: grandTotal, // check against total incl. GST
+          code: promoCode, phone: form.phone, servicePrice: subtotal,
           category: selectedServices.length === 1 ? selectedServices[0].category : undefined,
         }),
       });

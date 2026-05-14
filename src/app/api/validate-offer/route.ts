@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   // Check min order
   if (servicePrice < parseFloat(offer.min_order as string)) {
     return NextResponse.json({
-      error: `This code is valid only on bills above ₹${offer.min_order} (incl. GST)`,
+      error: `This code is valid only on services above ₹${offer.min_order} (before GST)`,
     }, { status: 400 });
   }
 
