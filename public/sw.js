@@ -8,6 +8,8 @@ self.addEventListener("push", (event) => {
       badge: "/icon-192.png",
       tag: "booking-notification",
       requireInteraction: true,
+      silent: false,
+      vibrate: [300, 100, 300, 100, 300],
       data: { url: data.url || "/admin/appointments" },
     })
   );
@@ -16,6 +18,15 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data?.url || "/admin/appointments")
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes("spinkudlu.com") && "focus" in client) {
+          client.focus();
+          client.navigate(event.notification.data?.url || "/admin/appointments");
+          return;
+        }
+      }
+      clients.openWindow(event.notification.data?.url || "/admin/appointments");
+    })
   );
 });
