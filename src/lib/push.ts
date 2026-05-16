@@ -1,18 +1,19 @@
 import webpush from "web-push";
 import { getSql } from "@/lib/db";
 
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function sendPushToAdmin(payload: {
   title: string;
   body: string;
   url?: string;
 }) {
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+
+  // Set VAPID details inside the function — not at module level (breaks build)
+  webpush.setVapidDetails(
+    `mailto:${process.env.VAPID_EMAIL || "spinsalonkudlu2431@gmail.com"}`,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
 
   try {
     const sql = getSql();
@@ -38,11 +39,11 @@ export async function sendPushToAdmin(payload: {
     );
 
     // Remove expired/invalid subscriptions
-    const expired = results
+    const failed = results
       .map((r, i) => ({ r, sub: subs[i] }))
       .filter(({ r }) => r.status === "rejected");
 
-    for (const { sub } of expired) {
+    for (const { sub } of failed) {
       await sql`DELETE FROM push_subscriptions WHERE endpoint = ${sub.endpoint}`.catch(() => {});
     }
   } catch (err) {
