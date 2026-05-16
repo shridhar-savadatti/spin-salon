@@ -4,6 +4,7 @@ import { generateId } from "@/lib/utils";
 import { SERVICES } from "@/lib/services-data";
 import { SelectedService } from "@/types";
 import { sendBookingNotificationToAdmin } from "@/lib/email";
+import { sendPushToAdmin } from "@/lib/push";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +114,13 @@ export async function POST(req: NextRequest) {
       await sql`UPDATE offers SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER(${discountCode})`;
     }
 
-    // Send email notification to admin (runs in background, won't block response)
+    // Send push + email notifications (background, won't block response)
+    sendPushToAdmin({
+      title: `🔔 New Booking — ${customerName}`,
+      body: `${serviceNames} · ${date} at ${time}`,
+      url: "https://www.spinkudlu.com/admin/appointments",
+    });
+
     sendBookingNotificationToAdmin({
       bookingId: id,
       customerName,

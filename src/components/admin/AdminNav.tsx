@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PushToggle from "@/components/admin/PushToggle";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Calendar, Settings, BarChart2, LogOut, FileText, Megaphone, Menu, X, Tag } from "lucide-react";
@@ -127,7 +128,8 @@ export default function AdminNav() {
         <nav className="flex-1 space-y-1 p-4">
           <NavLinks />
         </nav>
-        <div className="border-t border-zinc-800 p-4">
+        <div className="border-t border-zinc-800 p-4 space-y-2">
+          <PushToggle />
           <button onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition hover:bg-red-900/30 hover:text-red-400">
             <LogOut size={17} /> Logout
