@@ -3,6 +3,7 @@ import Hero from "@/components/sections/Hero";
 import ServicesHighlight from "@/components/sections/ServicesHighlight";
 import Testimonials from "@/components/sections/Testimonials";
 import OfferBanner from "@/components/sections/OfferBanner";
+import FeaturedService from "@/components/sections/FeaturedService";
 import BookingCTA from "@/components/sections/BookingCTA";
 import PageAnalytics from "@/components/PageAnalytics";
 
@@ -18,6 +19,7 @@ export default function HomePage() {
       <Hero />
       <ServicesHighlight />
       <OfferBanner />
+      <FeaturedService />
       <Testimonials />
       <BookingCTA />
     </>

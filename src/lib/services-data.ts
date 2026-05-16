@@ -18,6 +18,7 @@ export const SERVICES: Service[] = [
   { id: "w-deep-spa", name: "Deep Nourishing Hair Spa", category: "Women's Hair", description: "Absolut Repair intense nourishing treatment. Price depends on hair length.", duration: 75, price: 2000 },
   { id: "w-nanoplastia", name: "Nanoplastia", category: "Women's Hair", description: "Amino acid restoration treatment for smooth, healthy hair. Price depends on hair length.", duration: 180, price: 6500 },
   { id: "w-botox", name: "Hair Botox", category: "Women's Hair", description: "Deep repair filler treatment for thin, damaged hair. Price depends on hair length.", duration: 150, price: 5500 },
+  { id: "w-permanent-blowdry", name: "Permanent Blowdry", category: "Women's Hair", description: "Long-lasting blowdry treatment for salon-smooth, frizz-free hair. Available for all hair lengths. Price depends on hair length.", duration: 120, price: 7000 },
   { id: "w-scalp-soothing", name: "Loreal Scalp Soothing Treatment", category: "Women's Hair", description: "Calms sensitive, irritated scalp.", duration: 45, price: 1800 },
   { id: "w-dandruff", name: "Dandruff Treatment", category: "Women's Hair", description: "Brillare targeted dandruff control. Price depends on hair length.", duration: 45, price: 1800 },
   { id: "w-hairfall", name: "Hair Fall Treatment", category: "Women's Hair", description: "Brillare treatment to reduce hair fall.", duration: 45, price: 1800 },
