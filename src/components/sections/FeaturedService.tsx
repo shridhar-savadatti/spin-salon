@@ -58,7 +58,7 @@ export default function FeaturedService() {
               </div>
             </div>
 
-            <Link href="/booking?category=Women's Hair">
+            <Link href="/booking?service=w-permanent-blowdry">
               <Button variant="light" size="lg" className="w-full sm:w-auto">
                 Book Permanent Blowdry <ArrowRight size={16} />
               </Button>
