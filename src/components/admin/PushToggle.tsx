@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, X } from "lucide-react";
 
 const VAPID_PUBLIC_KEY = "BDVIN_QoP_j66wpUePQCnPMcI6uMChvno18xfwsJY-lB9kUTPraiqoV-EfcpHcF1qawLfIk8EdKWEDprb5qQlQU";
 
@@ -12,46 +12,83 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
+async function doSubscribe() {
+  const reg = await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+  await fetch("/api/push/subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sub.toJSON()),
+  });
+  return sub;
+}
+
 export default function PushToggle() {
-  const [status, setStatus] = useState<"loading" | "unsupported" | "denied" | "subscribed" | "unsubscribed">("loading");
-  const [toggling, setToggling] = useState(false);
+  const [status, setStatus] = useState<"loading" | "unsupported" | "denied" | "subscribed" | "prompt">("loading");
+  const [showBanner, setShowBanner] = useState(false);
+  const [enabling, setEnabling] = useState(false);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setStatus("unsupported");
       return;
     }
+
     navigator.serviceWorker.register("/sw.js").then(async reg => {
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) setStatus("subscribed");
-      else if (Notification.permission === "denied") setStatus("denied");
-      else setStatus("unsubscribed");
+      await navigator.serviceWorker.ready;
+
+      if (Notification.permission === "denied") {
+        setStatus("denied");
+        return;
+      }
+
+      const existing = await reg.pushManager.getSubscription();
+
+      if (existing) {
+        // Already subscribed — silently re-register to ensure DB has it
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(existing.toJSON()),
+        }).catch(() => {});
+        setStatus("subscribed");
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        // Permission already granted — auto-subscribe silently
+        try {
+          await doSubscribe();
+          setStatus("subscribed");
+        } catch {
+          setStatus("prompt");
+          setShowBanner(true);
+        }
+      } else {
+        // Need to ask — show banner
+        setStatus("prompt");
+        setShowBanner(true);
+      }
     });
   }, []);
 
-  const subscribe = async () => {
-    setToggling(true);
+  const handleEnable = async () => {
+    setEnabling(true);
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
-      });
+      await doSubscribe();
       setStatus("subscribed");
-    } catch (err) {
-      console.error("Subscribe failed:", err);
-      setStatus(Notification.permission === "denied" ? "denied" : "unsubscribed");
+      setShowBanner(false);
+    } catch {
+      if (Notification.permission === "denied") setStatus("denied");
     }
-    setToggling(false);
+    setEnabling(false);
   };
 
-  const unsubscribe = async () => {
-    setToggling(true);
+  const handleDisable = async () => {
     try {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
@@ -63,30 +100,49 @@ export default function PushToggle() {
         });
         await sub.unsubscribe();
       }
-      setStatus("unsubscribed");
-    } catch (err) {
-      console.error("Unsubscribe failed:", err);
-    }
-    setToggling(false);
+      setStatus("prompt");
+      setShowBanner(false);
+    } catch { /* ignore */ }
   };
 
   if (status === "loading" || status === "unsupported") return null;
 
   return (
-    <button
-      onClick={status === "subscribed" ? unsubscribe : subscribe}
-      disabled={toggling || status === "denied"}
-      title={status === "denied" ? "Notifications blocked in browser settings" : status === "subscribed" ? "Notifications ON — tap to turn off" : "Turn on booking notifications"}
-      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition ${
-        status === "subscribed"
-          ? "bg-green-900/40 text-green-400 hover:bg-red-900/30 hover:text-red-400"
-          : status === "denied"
-          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
-      } disabled:opacity-50`}
-    >
-      {status === "subscribed" ? <Bell size={14} /> : <BellOff size={14} />}
-      {toggling ? "..." : status === "subscribed" ? "Notifications ON" : status === "denied" ? "Blocked" : "Enable Notifications"}
-    </button>
+    <>
+      {/* Prominent banner — shown only when permission not yet granted */}
+      {showBanner && status === "prompt" && (
+        <div className="mx-3 mb-3 rounded-xl bg-amber-500/20 border border-amber-500/40 p-3">
+          <div className="flex items-start gap-2">
+            <Bell size={16} className="text-amber-400 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-amber-300 mb-1">Enable booking alerts</p>
+              <p className="text-xs text-zinc-400 mb-2">Get notified instantly when someone books.</p>
+              <button onClick={handleEnable} disabled={enabling}
+                className="w-full rounded-lg bg-amber-500 py-1.5 text-xs font-bold text-white hover:bg-amber-400 disabled:opacity-50 transition">
+                {enabling ? "Enabling..." : "Enable Now"}
+              </button>
+            </div>
+            <button onClick={() => setShowBanner(false)} className="text-zinc-500 hover:text-zinc-300">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Small status indicator */}
+      {status === "subscribed" && (
+        <button onClick={handleDisable}
+          title="Notifications ON — tap to turn off"
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium bg-green-900/30 text-green-400 hover:bg-red-900/20 hover:text-red-400 transition">
+          <Bell size={13} /> Notifications ON
+        </button>
+      )}
+
+      {status === "denied" && (
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-zinc-500">
+          <Bell size={13} /> Notifications blocked
+        </div>
+      )}
+    </>
   );
 }
