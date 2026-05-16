@@ -42,7 +42,7 @@ export default function Navbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-300",
+        "fixed top-8 z-50 w-full transition-all duration-300",
         isWhite ? "bg-white/95 shadow-sm backdrop-blur-sm" : "bg-transparent"
       )}
     >

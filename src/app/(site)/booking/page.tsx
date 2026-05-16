@@ -562,7 +562,7 @@ export default function BookingPage() {
   return (
     <>
       {/* pt-20 clears the fixed navbar, no hero text needed */}
-      <section className="bg-zinc-50 pb-16 pt-20">
+      <section className="bg-zinc-50 pb-16 pt-[88px]">
         <Suspense fallback={<div className="py-16 text-center text-zinc-400">Loading...</div>}>
           <BookingForm />
         </Suspense>
