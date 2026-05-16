@@ -52,20 +52,27 @@ function buildWaLink(appointment: Appointment, status: string): string {
 function playAlertSound() {
   try {
     const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const times = [0, 0.25, 0.5];
-    times.forEach(t => {
+
+    // WhatsApp-style notification: two rising tones
+    const notes = [
+      { freq: 660, start: 0, duration: 0.15 },
+      { freq: 880, start: 0.18, duration: 0.25 },
+    ];
+
+    notes.forEach(({ freq, start, duration }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.frequency.value = 880;
+      osc.frequency.value = freq;
       osc.type = "sine";
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
-      osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.2);
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration);
     });
-  } catch { /* ignore if audio not available */ }
+  } catch { /* ignore */ }
 }
 
 export default function AdminAppointmentsPage() {
@@ -121,8 +128,19 @@ export default function AdminAppointmentsPage() {
     }
   }, [lastKnownIds]);
 
-  // Initial load
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Initial load + clear badge when page opens
+  useEffect(() => {
+    load();
+    // Clear app icon badge count when admin views appointments
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.active?.postMessage("clear-badge");
+      }).catch(() => {});
+    }
+    if ("clearAppBadge" in navigator) {
+      (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge().catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-poll every 30 seconds silently
   useEffect(() => {
