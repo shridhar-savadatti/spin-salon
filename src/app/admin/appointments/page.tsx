@@ -5,7 +5,7 @@ import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { formatTime, formatCurrency } from "@/lib/utils";
-import { Search, RefreshCw, MessageCircle, Calendar } from "lucide-react";
+import { Search, RefreshCw, MessageCircle, Calendar, Bell } from "lucide-react";
 
 interface Appointment {
   id: string; customerName: string; customerPhone: string;
@@ -58,9 +58,11 @@ export default function AdminAppointmentsPage() {
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
   const [pendingWa, setPendingWa] = useState<Record<string, { status: string; waLink: string }>>({});
+  const [newCount, setNewCount] = useState(0);
+  const [lastKnownIds, setLastKnownIds] = useState<Set<string>>(new Set());;
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const base = window.location.origin;
       const [r1, r2] = await Promise.all([
@@ -69,7 +71,6 @@ export default function AdminAppointmentsPage() {
       ]);
       if (r1.ok) {
         const raw = await r1.json();
-        // Sort: upcoming dates first (ASC), then time ASC within each date
         const sorted = raw.map((a: Record<string, unknown>) => ({
           id: a.id, customerName: a.customer_name, customerPhone: a.customer_phone,
           serviceId: a.service_id, serviceName: a.service_name, servicePrice: a.service_price,
@@ -81,15 +82,30 @@ export default function AdminAppointmentsPage() {
           if (a.date !== b.date) return a.date < b.date ? -1 : 1;
           return a.time < b.time ? -1 : 1;
         });
+
+        // Detect new bookings (new IDs not seen before)
+        if (lastKnownIds.size > 0) {
+          const incoming = sorted as Appointment[];
+          const newOnes = incoming.filter(a => a.status === "pending" && !lastKnownIds.has(a.id));
+          if (newOnes.length > 0) setNewCount(c => c + newOnes.length);
+        }
+        setLastKnownIds(new Set((sorted as Appointment[]).map(a => a.id)));
         setAppointments(sorted);
       }
       if (r2.ok) setStaff(await r2.json());
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, []);
+  }, [lastKnownIds]);
 
-  useEffect(() => { load(); }, [load]);
+  // Initial load
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-poll every 30 seconds silently
+  useEffect(() => {
+    const interval = setInterval(() => load(true), 30000);
+    return () => clearInterval(interval);
+  }, [load]);
 
   const updateStatus = async (id: string, status: string, appointment: Appointment) => {
     setUpdating(id);
@@ -211,14 +227,32 @@ export default function AdminAppointmentsPage() {
     <div className="flex min-h-screen">
       <AdminNav />
       <div className="flex-1 p-4 md:p-8">
+
+        {/* New booking alert banner */}
+        {newCount > 0 && (
+          <div className="mb-4 flex items-center justify-between rounded-xl bg-green-600 px-4 py-3 shadow-lg">
+            <div className="flex items-center gap-2">
+              <Bell size={16} className="text-white animate-bounce" />
+              <span className="font-bold text-white text-sm">
+                {newCount} new booking{newCount > 1 ? "s" : ""} received!
+              </span>
+            </div>
+            <button onClick={() => { setNewCount(0); setFilter("pending"); }}
+              className="rounded-lg bg-white/20 px-3 py-1 text-xs font-semibold text-white hover:bg-white/30">
+              View now
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-zinc-900">
             Appointments {!loading && <span className="text-base font-normal text-zinc-400">({appointments.length})</span>}
           </h1>
-          <Button variant="ghost" size="sm" onClick={load} className="gap-2">
+          <Button variant="ghost" size="sm" onClick={() => load()} className="gap-2">
             <RefreshCw size={15} /> Refresh
           </Button>
+          <span className="text-xs text-zinc-400 hidden sm:block">Auto-refreshes every 30s</span>
         </div>
 
         {loading ? (
