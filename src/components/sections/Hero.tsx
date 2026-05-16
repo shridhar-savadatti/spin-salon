@@ -25,7 +25,7 @@ export default function Hero() {
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Offer badges */}
-        <div className="mb-8 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+        <div className="mb-8 flex flex-col items-center gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2 text-sm font-semibold text-yellow-300 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
             New clients: 20% off above ₹2000
@@ -33,6 +33,10 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 rounded-full border border-green-400/40 bg-green-400/10 px-5 py-2 text-sm font-semibold text-green-300 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
             New clients: 15% off above ₹1000
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-pink-400/40 bg-pink-400/10 px-5 py-2 text-sm font-semibold text-pink-300 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
+            Permanent Blowdry — Any Length ₹7,000
           </div>
         </div>
 
