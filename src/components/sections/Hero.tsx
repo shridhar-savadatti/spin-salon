@@ -24,10 +24,16 @@ export default function Hero() {
       <div className="absolute inset-0 bg-zinc-900/70" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        {/* Badge */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-zinc-200 backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-white" />
-          New clients get 20% off on services above ₹2000
+        {/* Offer badges */}
+        <div className="mb-8 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2 text-sm font-semibold text-yellow-300 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+            New clients: 20% off above ₹2000
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-green-400/40 bg-green-400/10 px-5 py-2 text-sm font-semibold text-green-300 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+            New clients: 15% off above ₹1000
+          </div>
         </div>
 
         {/* Spin logo mark */}
