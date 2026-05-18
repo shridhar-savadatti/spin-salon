@@ -27,6 +27,7 @@ export interface SelectedService {
   price: number;
   duration: number;
   category: string;
+  quantity: number;
 }
 
 export interface Appointment {

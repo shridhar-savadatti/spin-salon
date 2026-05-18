@@ -36,7 +36,7 @@ function BookingForm() {
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>(() => {
     if (preselectedServiceId) {
       const s = SERVICES.find(sv => sv.id === preselectedServiceId);
-      if (s) return [{ id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
+      if (s) return [{ id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category, quantity: 1 }];
     }
     return [];
   });
@@ -56,11 +56,11 @@ function BookingForm() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
 
-  const subtotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  const subtotal = selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
   const discountedSubtotal = appliedOffer ? appliedOffer.finalPrice : subtotal;
   const gstAmount = calcGst(discountedSubtotal);
   const grandTotal = discountedSubtotal + gstAmount;
-  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration * s.quantity, 0);
   const selectedStaff = staffList.find(s => s.id === staffId);
   const filteredServices = SERVICES.filter(s =>
     s.category === activeCategory &&
@@ -105,13 +105,18 @@ function BookingForm() {
     });
   }, [date, staffId]);
 
-  const toggleService = (s: typeof SERVICES[0]) => {
+  const setServiceQuantity = (s: typeof SERVICES[0], qty: number) => {
     setSelectedServices(prev => {
       const exists = prev.find(p => p.id === s.id);
-      const next = exists ? prev.filter(p => p.id !== s.id) : [...prev, { id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
-      // Scroll to selected summary when first service is added
-      if (!exists && prev.length === 0) scrollTo("selected-summary");
-      return next;
+      if (qty <= 0) {
+        return prev.filter(p => p.id !== s.id);
+      }
+      if (exists) {
+        return prev.map(p => p.id === s.id ? { ...p, quantity: qty } : p);
+      }
+      // New service added
+      if (prev.length === 0) scrollTo("selected-summary");
+      return [...prev, { id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category, quantity: qty }];
     });
     setAppliedOffer(null);
     setPromoError("");
@@ -165,7 +170,7 @@ function BookingForm() {
       scrollTo("booking-confirmed");
 
       // Notify admin
-      const serviceList = selectedServices.map(s => `• ${s.name} (₹${s.price})`).join("\n");
+      const serviceList = selectedServices.map(s => `• ${s.name}${s.quantity > 1 ? ` ×${s.quantity}` : ""} (₹${s.price * s.quantity})`).join("\n");
       const adminMsg = `🔔 *New Booking Request*\n\n👤 ${form.name}\n📞 ${form.phone}\n\n💇 Services:\n${serviceList}\n\n💰 Subtotal: ₹${subtotal}\n🧾 GST (5%): ₹${gstAmount}\n💵 Total: ₹${grandTotal}${appliedOffer ? ` (after ${appliedOffer.code})` : ""}\n⏱ ~${totalDuration} mins\n📅 ${date} at ${time}\n🆔 ID: ${data.id}`;
       window.open(`https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(adminMsg)}`, "_blank");
     } catch (err: unknown) {
@@ -274,7 +279,7 @@ function BookingForm() {
                 {cat}
                 {selectedServices.filter(s => s.category === cat).length > 0 && (
                   <span className="ml-1.5 rounded-full bg-green-500 px-1.5 py-0.5 text-xs text-white">
-                    {selectedServices.filter(s => s.category === cat).length}
+                    {selectedServices.filter(s => s.category === cat).reduce((n, s) => n + s.quantity, 0)}
                   </span>
                 )}
               </button>
@@ -288,8 +293,8 @@ function BookingForm() {
               <div className="flex flex-wrap gap-2">
                 {selectedServices.map(s => (
                   <div key={s.id} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-white">
-                    {s.name} · {formatCurrency(s.price)}
-                    <button onClick={() => toggleService(SERVICES.find(sv => sv.id === s.id)!)} className="ml-1 text-zinc-400 hover:text-white"><X size={12} /></button>
+                    {s.name}{s.quantity > 1 ? ` ×${s.quantity}` : ""} · {formatCurrency(s.price * s.quantity)}
+                    <button onClick={() => setServiceQuantity(SERVICES.find(sv => sv.id === s.id)!, 0)} className="ml-1 text-zinc-400 hover:text-white"><X size={12} /></button>
                   </div>
                 ))}
               </div>
@@ -311,28 +316,39 @@ function BookingForm() {
           ) : (
             <div className="space-y-2">
               {filteredServices.map(s => {
-                const isSelected = selectedServices.some(p => p.id === s.id);
+                const sel = selectedServices.find(p => p.id === s.id);
+                const isSelected = !!sel;
+                const qty = sel?.quantity || 0;
                 return (
-                  <button key={s.id} onClick={() => toggleService(s)}
-                    className={`w-full rounded-xl border-2 p-4 text-left transition-all ${isSelected ? "border-zinc-900 bg-zinc-900 shadow-md" : "border-zinc-200 bg-white hover:border-zinc-400"}`}>
+                  <div key={s.id}
+                    className={`rounded-xl border-2 p-4 transition-all ${isSelected ? "border-zinc-900 bg-zinc-900 shadow-md" : "border-zinc-200 bg-white"}`}>
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all ${isSelected ? "border-white bg-white" : "border-zinc-300"}`}>
-                          {isSelected && <span className="text-zinc-900 text-xs font-bold">✓</span>}
-                        </div>
-                        <div>
-                          <p className={`font-semibold ${isSelected ? "text-white" : "text-zinc-900"}`}>{s.name}</p>
-                          <p className={`mt-0.5 text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>{s.description}</p>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className={`font-bold ${isSelected ? "text-white" : "text-zinc-900"}`}>{formatCurrency(s.price)}*</p>
-                        <p className={`mt-0.5 flex items-center justify-end gap-1 text-xs ${isSelected ? "text-zinc-300" : "text-zinc-400"}`}>
-                          <Clock size={10} />{s.duration}m
+                      <div className="flex-1 cursor-pointer" onClick={() => setServiceQuantity(s, isSelected ? 0 : 1)}>
+                        <p className={`font-semibold ${isSelected ? "text-white" : "text-zinc-900"}`}>{s.name}</p>
+                        <p className={`mt-0.5 text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>{s.description}</p>
+                        <p className={`mt-1 text-xs ${isSelected ? "text-zinc-300" : "text-zinc-400"}`}>
+                          <Clock size={10} className="inline mr-1" />{s.duration}m · {formatCurrency(s.price)}*
                         </p>
                       </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        {isSelected ? (
+                          <>
+                            <button onClick={() => setServiceQuantity(s, qty - 1)}
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white font-bold text-base hover:bg-white/30 transition">−</button>
+                            <span className="w-5 text-center text-sm font-bold text-white">{qty}</span>
+                            <button onClick={() => setServiceQuantity(s, qty + 1)}
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white font-bold text-base hover:bg-white/30 transition">+</button>
+                          </>
+                        ) : (
+                          <button onClick={() => setServiceQuantity(s, 1)}
+                            className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-zinc-300 text-zinc-400 font-bold text-base hover:border-zinc-900 hover:text-zinc-900 transition">+</button>
+                        )}
+                      </div>
                     </div>
-                  </button>
+                    {isSelected && qty > 1 && (
+                      <p className="mt-2 text-xs text-zinc-300">Subtotal: {formatCurrency(s.price * qty)}*</p>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -416,8 +432,8 @@ function BookingForm() {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Bill Summary</p>
               {selectedServices.map(s => (
                 <div key={s.id} className="flex justify-between py-1 text-sm">
-                  <span className="text-zinc-300">{s.name}</span>
-                  <span className="font-semibold text-white">{formatCurrency(s.price)}</span>
+                  <span className="text-zinc-300">{s.name}{s.quantity > 1 ? ` ×${s.quantity}` : ""}</span>
+                  <span className="font-semibold text-white">{formatCurrency(s.price * s.quantity)}</span>
                 </div>
               ))}
               {appliedOffer && (
@@ -504,8 +520,8 @@ function BookingForm() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Services</p>
                 {selectedServices.map(s => (
                   <div key={s.id} className="flex justify-between py-1.5 border-b border-zinc-50 text-sm">
-                    <span className="text-zinc-700">{s.name}</span>
-                    <span className="font-semibold text-zinc-900">{formatCurrency(s.price)}</span>
+                    <span className="text-zinc-700">{s.name}{s.quantity > 1 ? ` ×${s.quantity}` : ""}</span>
+                    <span className="font-semibold text-zinc-900">{formatCurrency(s.price * s.quantity)}</span>
                   </div>
                 ))}
                 {appliedOffer && (

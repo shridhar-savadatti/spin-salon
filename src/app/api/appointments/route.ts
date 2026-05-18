@@ -44,15 +44,15 @@ export async function POST(req: NextRequest) {
     } else if (serviceId) {
       const s = SERVICES.find(sv => sv.id === serviceId);
       if (!s) return NextResponse.json({ error: "Invalid service" }, { status: 400 });
-      services = [{ id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category }];
+      services = [{ id: s.id, name: s.name, price: s.price, duration: s.duration, category: s.category, quantity: 1 }];
     } else {
       return NextResponse.json({ error: "No services selected" }, { status: 400 });
     }
 
     const primaryService = services[0];
-    const totalPrice = services.reduce((sum, s) => sum + s.price, 0);
-    const totalDuration = services.reduce((sum, s) => sum + s.duration, 0);
-    const serviceNames = services.map(s => s.name).join(", ");
+    const totalPrice = services.reduce((sum, s) => sum + s.price * (s.quantity || 1), 0);
+    const totalDuration = services.reduce((sum, s) => sum + s.duration * (s.quantity || 1), 0);
+    const serviceNames = services.map(s => s.quantity > 1 ? `${s.name} ×${s.quantity}` : s.name).join(", ");
     const servicesJson = JSON.stringify(services);
 
     const sql = getSql();
