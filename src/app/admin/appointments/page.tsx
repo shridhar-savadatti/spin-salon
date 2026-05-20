@@ -49,30 +49,52 @@ function buildWaLink(appointment: Appointment, status: string): string {
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
-function playAlertSound() {
+// Persistent alarm — plays a loud repeating alarm until dismissed
+let alarmInterval: ReturnType<typeof setInterval> | null = null;
+let alarmCtx: AudioContext | null = null;
+
+function playAlarmTone() {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-
-    // WhatsApp-style notification: two rising tones
-    const notes = [
-      { freq: 660, start: 0, duration: 0.15 },
-      { freq: 880, start: 0.18, duration: 0.25 },
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!alarmCtx || alarmCtx.state === "closed") {
+      alarmCtx = new AudioCtx();
+    }
+    const ctx = alarmCtx;
+    // Loud urgent pattern: beep-beep-beep
+    const pattern = [
+      { freq: 1000, start: 0,    duration: 0.12 },
+      { freq: 1000, start: 0.18, duration: 0.12 },
+      { freq: 1000, start: 0.36, duration: 0.12 },
+      { freq: 1200, start: 0.60, duration: 0.25 },
     ];
-
-    notes.forEach(({ freq, start, duration }) => {
+    pattern.forEach(({ freq, start, duration }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.frequency.value = freq;
-      osc.type = "sine";
+      osc.type = "square";
       gain.gain.setValueAtTime(0, ctx.currentTime + start);
-      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + start + 0.02);
+      gain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + start + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
       osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + duration);
+      osc.stop(ctx.currentTime + start + duration + 0.05);
     });
   } catch { /* ignore */ }
+}
+
+function startPersistentAlarm() {
+  playAlarmTone();
+  alarmInterval = setInterval(playAlarmTone, 1500);
+}
+
+function stopPersistentAlarm() {
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+  if (alarmCtx) { alarmCtx.close().catch(() => {}); alarmCtx = null; }
+}
+
+function playAlertSound() {
+  startPersistentAlarm();
 }
 
 export default function AdminAppointmentsPage() {
@@ -269,19 +291,29 @@ export default function AdminAppointmentsPage() {
       <AdminNav />
       <div className="flex-1 p-4 md:p-8">
 
-        {/* New booking alert banner */}
+        {/* New booking alarm banner — flashing + persistent sound */}
         {newCount > 0 && (
-          <div className="mb-4 flex items-center justify-between rounded-xl bg-green-600 px-4 py-3 shadow-lg">
-            <div className="flex items-center gap-2">
-              <Bell size={16} className="text-white animate-bounce" />
-              <span className="font-bold text-white text-sm">
-                {newCount} new booking{newCount > 1 ? "s" : ""} received!
-              </span>
+          <div className="mb-4 rounded-xl shadow-2xl overflow-hidden animate-pulse border-2 border-green-400">
+            <div className="bg-green-600 px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-green-600 text-xl font-black animate-bounce shrink-0">
+                    🔔
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-white text-base">
+                      {newCount} New Booking{newCount > 1 ? "s" : ""}!
+                    </p>
+                    <p className="text-green-100 text-xs">Tap to view and confirm</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { stopPersistentAlarm(); setNewCount(0); setFilter("pending"); }}
+                  className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-green-700 hover:bg-green-50 shrink-0 shadow-md">
+                  View & Stop Alarm
+                </button>
+              </div>
             </div>
-            <button onClick={() => { setNewCount(0); setFilter("pending"); }}
-              className="rounded-lg bg-white/20 px-3 py-1 text-xs font-semibold text-white hover:bg-white/30">
-              View now
-            </button>
           </div>
         )}
 
