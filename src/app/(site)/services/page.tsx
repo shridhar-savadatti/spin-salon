@@ -7,10 +7,15 @@ import { Clock, ArrowRight } from "lucide-react";
 import PageAnalytics from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
-  title: "Services & Pricing",
-  description: "Explore all hair, skin, nail, and treatment services at Spin Unisex Salon Bengaluru with transparent pricing.",
+  title: "Hair, Beauty & Nail Services | Spin Unisex Salon Kudlu Gate, Bengaluru",
+  description: "Full price list for haircuts, hair colouring, balayage, facials, waxing, nail art & bridal packages at Spin Unisex Salon — Kudlu Gate, near HSR Layout, Bengaluru. Transparent pricing, expert stylists.",
+  keywords: ["haircut Kudlu", "hair salon HSR Layout", "balayage Bengaluru", "facial near me Kudlu", "nail art Bengaluru", "bridal makeup Bengaluru", "waxing Bommanahalli", "salon near Silk Board"],
   alternates: { canonical: "https://www.spinkudlu.com/services" },
-  openGraph: { url: "https://www.spinkudlu.com/services" },
+  openGraph: {
+    url: "https://www.spinkudlu.com/services",
+    title: "Hair, Beauty & Nail Services | Spin Unisex Salon Kudlu Bengaluru",
+    description: "Full price list for haircuts, colouring, facials, waxing, nail art & bridal packages at Spin Unisex Salon — Kudlu Gate, Bengaluru.",
+  },
 };
 
 export default function ServicesPage() {

@@ -50,7 +50,7 @@ const jsonLd = {
   name: "Spin Unisex Salon",
   description: "Spin Unisex Salon in Kudlu, Bengaluru — premium haircuts, colouring, facials, nails and more. Near HSR Layout.",
   url: BASE_URL,
-  telephone: "0120-524-4768",
+  telephone: "+919164363131",
   email: "spinsalonkudlu2431@gmail.com",
   address: {
     "@type": "PostalAddress",
@@ -78,7 +78,30 @@ const jsonLd = {
   hasMap: "https://maps.app.goo.gl/uztdRtsVakV416SR7",
   logo: `${BASE_URL}/icon-512.png`,
   image: `${BASE_URL}/icon-512.png`,
-  sameAs: [],
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5.0",
+    bestRating: "5",
+    worstRating: "1",
+    ratingCount: "50",
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Salon Services",
+    itemListElement: [
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Haircut for Men" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Haircut for Women" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Hair Colouring & Balayage" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Facial & Skin Treatments" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Waxing" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Nail Art" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Bridal Makeup Package" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Permanent Blowdry" } },
+    ],
+  },
+  sameAs: [
+    "https://maps.app.goo.gl/uztdRtsVakV416SR7",
+  ],
   "@id": BASE_URL,
 };
 

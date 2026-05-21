@@ -80,8 +80,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-zinc-900">Phone (Click to Call)</p>
-                    <a href="tel:01205244768" className="block text-zinc-500 hover:text-zinc-900 transition">0120-524-4768</a>
-                    <a href="tel:919164363131" className="block text-zinc-500 hover:text-zinc-900 transition">+91 91643 63131</a>
+                    <a href="tel:+919164363131" className="block text-zinc-500 hover:text-zinc-900 transition">+91 91643 63131</a>
                   </div>
                 </div>
               </li>
@@ -208,6 +207,33 @@ export default function ContactPage() {
               </form>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Neighborhoods — local SEO signals */}
+      <section className="bg-zinc-50 px-4 py-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-3 text-2xl font-extrabold text-zinc-900">Areas We Serve</h2>
+          <p className="mb-8 text-zinc-500">
+            Conveniently located at Kudlu Gate — easily reachable from these Bengaluru neighbourhoods:
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {[
+              "Kudlu Gate", "HSR Layout", "Bommanahalli", "Silk Board",
+              "BTM Layout", "Electronic City", "Harlur", "Sarjapur Road",
+              "Koramangala", "Bellandur", "Agara", "Haralur Road",
+            ].map((area) => (
+              <span
+                key={area}
+                className="rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700"
+              >
+                {area}
+              </span>
+            ))}
+          </div>
+          <p className="mt-8 text-sm text-zinc-400">
+            Spin Unisex Salon · Kudlu Main Road, Kudlu Gate, Bengaluru, Karnataka 560068
+          </p>
         </div>
       </section>
     </>
