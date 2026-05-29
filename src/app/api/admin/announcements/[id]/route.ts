@@ -16,10 +16,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if ("isActive" in body && Object.keys(body).length === 1) {
     await sql`UPDATE announcements SET is_active = ${body.isActive ? 1 : 0} WHERE id = ${id}`;
   } else {
-    const { text, color, sortOrder } = body;
+    const { text, color, sortOrder, link } = body;
     await sql`
       UPDATE announcements
-      SET text = ${text.trim()}, color = ${color}, sort_order = ${sortOrder ?? 0}
+      SET text = ${text.trim()}, color = ${color}, link = ${link || null}, sort_order = ${sortOrder ?? 0}
       WHERE id = ${id}
     `;
   }

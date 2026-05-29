@@ -39,7 +39,7 @@ export default function AnnouncementsPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
-  const [form, setForm] = useState({ text: "", color: "yellow" });
+  const [form, setForm] = useState({ text: "", color: "yellow", link: "" });
   const [formError, setFormError] = useState("");
 
   const load = useCallback(async () => {
@@ -52,7 +52,7 @@ export default function AnnouncementsPage() {
   useEffect(() => { load(); }, [load]);
 
   const resetForm = () => {
-    setForm({ text: "", color: "yellow" });
+    setForm({ text: "", color: "yellow", link: "" });
     setFormError("");
     setShowForm(false);
   };
@@ -64,7 +64,7 @@ export default function AnnouncementsPage() {
     const res = await fetch("/api/admin/announcements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: form.text, color: form.color, sortOrder: items.length }),
+      body: JSON.stringify({ text: form.text, color: form.color, link: form.link || null, sortOrder: items.length }),
     });
     if (!res.ok) {
       const data = await res.json();
@@ -139,6 +139,17 @@ export default function AnnouncementsPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+                    Link <span className="text-zinc-400 font-normal">(optional — where clicking takes the user)</span>
+                  </label>
+                  <Input
+                    value={form.link}
+                    onChange={e => setForm(f => ({ ...f, link: e.target.value }))}
+                    placeholder="e.g. /booking?service=w-permanent-blowdry"
+                  />
                 </div>
 
                 {/* Preview */}

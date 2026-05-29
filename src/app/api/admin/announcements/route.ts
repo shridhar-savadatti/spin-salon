@@ -12,6 +12,7 @@ export async function GET() {
     id: r.id,
     text: r.text,
     color: r.color,
+    link: r.link ?? null,
     isActive: !!r.is_active,
     sortOrder: r.sort_order,
     createdAt: r.created_at,
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { text, color, sortOrder } = await req.json();
+  const { text, color, sortOrder, link } = await req.json();
   if (!text?.trim()) return NextResponse.json({ error: "Text is required" }, { status: 400 });
 
   const sql = getSql();
@@ -30,8 +31,8 @@ export async function POST(req: NextRequest) {
   const now = new Date().toISOString();
 
   await sql`
-    INSERT INTO announcements (id, text, color, is_active, sort_order, created_at)
-    VALUES (${id}, ${text.trim()}, ${color || "yellow"}, 1, ${sortOrder ?? 0}, ${now})
+    INSERT INTO announcements (id, text, color, link, is_active, sort_order, created_at)
+    VALUES (${id}, ${text.trim()}, ${color || "yellow"}, ${link || null}, 1, ${sortOrder ?? 0}, ${now})
   `;
 
   return NextResponse.json({ id, message: "Created" }, { status: 201 });

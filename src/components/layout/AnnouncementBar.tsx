@@ -11,19 +11,20 @@ const COLOR_TEXT: Record<string, string> = {
 };
 
 const FALLBACK = [
-  { text: "New clients: 20% off on bills above ₹2000 — Code WELCOME20", color: "text-yellow-300" },
-  { text: "New clients: 15% off on bills above ₹1000 — Code WELCOME15", color: "text-green-300" },
-  { text: "Permanent Blowdry for any hair length — ₹7,000", color: "text-pink-300" },
+  { text: "New clients: 20% off on bills above ₹2000 — Code WELCOME20", color: "text-yellow-300", link: "/booking" },
+  { text: "New clients: 15% off on bills above ₹1000 — Code WELCOME15", color: "text-green-300", link: "/booking" },
+  { text: "Permanent Blowdry for any hair length — ₹4,999", color: "text-pink-300", link: "/booking?service=w-permanent-blowdry" },
 ];
 
 async function getItems() {
   try {
     const sql = getSql();
-    const rows = await sql`SELECT text, color FROM announcements WHERE is_active = 1 ORDER BY sort_order ASC, created_at ASC`;
+    const rows = await sql`SELECT text, color, link FROM announcements WHERE is_active = 1 ORDER BY sort_order ASC, created_at ASC`;
     if (rows.length === 0) return FALLBACK;
     return rows.map((r: Record<string, unknown>) => ({
       text: r.text as string,
       color: COLOR_TEXT[r.color as string] ?? "text-yellow-300",
+      link: (r.link as string) || "/booking",
     }));
   } catch {
     return FALLBACK;
@@ -39,7 +40,7 @@ export default async function AnnouncementBar() {
       <div className="flex items-center h-full">
         <div className="flex animate-marquee whitespace-nowrap">
           {repeated.map((item, i) => (
-            <Link key={i} href="/booking"
+            <Link key={i} href={item.link ?? "/booking"}
               className={`inline-flex items-center shrink-0 px-6 text-xs font-semibold transition-opacity hover:opacity-80 ${item.color}`}>
               {item.text}
               <span className="mx-6 text-zinc-600">|</span>

@@ -153,6 +153,11 @@ export async function initDb() {
     )
   `;
 
+  // Add link column to announcements if missing
+  try {
+    await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS link TEXT`;
+  } catch { /* already exists */ }
+
   // Add new columns to appointments if missing
   try {
     await sql`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_code TEXT`;

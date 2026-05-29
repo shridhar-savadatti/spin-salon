@@ -38,14 +38,14 @@ const COLOR_BG: Record<string, string> = {
 };
 
 export default function Hero() {
-  const [announcement, setAnnouncement] = useState<{ text: string; color: string } | null>(null);
+  const [announcement, setAnnouncement] = useState<{ text: string; color: string; link: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/announcements")
       .then(r => r.ok ? r.json() : [])
-      .then((items: { text: string; color: string; isActive: boolean }[]) => {
+      .then((items: { text: string; color: string; link: string | null; isActive: boolean }[]) => {
         const first = items.find(i => i.isActive);
-        if (first) setAnnouncement({ text: first.text, color: first.color });
+        if (first) setAnnouncement({ text: first.text, color: first.color, link: first.link || "/booking" });
       })
       .catch(() => {});
   }, []);
@@ -67,10 +67,10 @@ export default function Hero() {
         {/* Offer badge */}
         <div className="mb-8 flex justify-center min-h-[2.5rem] items-center">
           {announcement && (
-            <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold backdrop-blur-sm ${COLOR_BG[announcement.color]} ${COLOR_BORDER[announcement.color]} ${COLOR_TEXT[announcement.color]}`}>
+            <Link href={announcement.link} className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold backdrop-blur-sm transition-opacity hover:opacity-80 ${COLOR_BG[announcement.color]} ${COLOR_BORDER[announcement.color]} ${COLOR_TEXT[announcement.color]}`}>
               <Sparkles size={14} className="shrink-0" />
               {announcement.text}
-            </div>
+            </Link>
           )}
         </div>
 
