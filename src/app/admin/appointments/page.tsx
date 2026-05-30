@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
 import { formatTime, formatCurrency } from "@/lib/utils";
-import { Search, RefreshCw, MessageCircle, Calendar, Bell } from "lucide-react";
+import { Search, MessageCircle, Plus } from "lucide-react";
+import { SERVICES, SERVICE_CATEGORIES } from "@/lib/services-data";
+import { SelectedService } from "@/types";
 
 interface Appointment {
   id: string; customerName: string; customerPhone: string;
@@ -49,52 +50,244 @@ function buildWaLink(appointment: Appointment, status: string): string {
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
-// Persistent alarm — plays a loud repeating alarm until dismissed
-let alarmInterval: ReturnType<typeof setInterval> | null = null;
-let alarmCtx: AudioContext | null = null;
+// Persistent alarm — plays repeating MP3 alarm until dismissed
+let alarmAudio: HTMLAudioElement | null = null;
 
-function playAlarmTone() {
+function startPersistentAlarm() {
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!alarmCtx || alarmCtx.state === "closed") {
-      alarmCtx = new AudioCtx();
-    }
-    const ctx = alarmCtx;
-    // Loud urgent pattern: beep-beep-beep
-    const pattern = [
-      { freq: 1000, start: 0,    duration: 0.12 },
-      { freq: 1000, start: 0.18, duration: 0.12 },
-      { freq: 1000, start: 0.36, duration: 0.12 },
-      { freq: 1200, start: 0.60, duration: 0.25 },
-    ];
-    pattern.forEach(({ freq, start, duration }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = "square";
-      gain.gain.setValueAtTime(0, ctx.currentTime + start);
-      gain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + duration + 0.05);
-    });
+    if (alarmAudio) { alarmAudio.pause(); alarmAudio = null; }
+    const audio = new Audio("/alarm.mp3");
+    audio.loop = true;
+    audio.volume = 1.0;
+    alarmAudio = audio;
+    audio.play().catch(() => {});
   } catch { /* ignore */ }
 }
 
-function startPersistentAlarm() {
-  playAlarmTone();
-  alarmInterval = setInterval(playAlarmTone, 1500);
-}
-
 function stopPersistentAlarm() {
-  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
-  if (alarmCtx) { alarmCtx.close().catch(() => {}); alarmCtx = null; }
+  if (alarmAudio) {
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+    alarmAudio = null;
+  }
 }
 
 function playAlertSound() {
   startPersistentAlarm();
+}
+
+function currentTimeHHMM(): string {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function WalkInModal({ staff, onClose, onSuccess }: { staff: Staff[]; onClose: () => void; onSuccess: () => void }) {
+  const today = new Date().toISOString().split("T")[0];
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date, setDate] = useState(today);
+  const [time, setTime] = useState(currentTimeHHMM);
+  const [staffId, setStaffId] = useState("");
+  const [notes, setNotes] = useState("");
+  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [pickService, setPickService] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [knownCustomer, setKnownCustomer] = useState<{ name: string; lastVisit: string | null; source: string } | null>(null);
+  const [lookingUp, setLookingUp] = useState(false);
+
+  const handlePhoneChange = async (val: string) => {
+    setPhone(val);
+    setKnownCustomer(null);
+    const digits = val.replace(/\D/g, "");
+    if (digits.length !== 10) return;
+    setLookingUp(true);
+    try {
+      const res = await fetch(`/api/admin/customer-lookup?phone=${digits}`);
+      const data = await res.json();
+      if (data.customer) {
+        setKnownCustomer(data.customer);
+        if (!name.trim()) setName(data.customer.name);
+      }
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const addService = () => {
+    const svc = SERVICES.find(s => s.id === pickService);
+    if (!svc) return;
+    const existing = selectedServices.find(s => s.id === svc.id);
+    if (existing) {
+      setSelectedServices(prev => prev.map(s => s.id === svc.id ? { ...s, quantity: s.quantity + 1 } : s));
+    } else {
+      setSelectedServices(prev => [...prev, { id: svc.id, name: svc.name, price: svc.price, duration: svc.duration, category: svc.category, quantity: 1 }]);
+    }
+    setPickService("");
+  };
+
+  const removeService = (id: string) => setSelectedServices(prev => prev.filter(s => s.id !== id));
+
+  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration * s.quantity, 0);
+
+  const submit = async () => {
+    if (!name.trim() || !phone.trim() || !date || !time || selectedServices.length === 0) {
+      setError("Fill all required fields and add at least one service.");
+      return;
+    }
+    if (phone.replace(/\D/g, "").length !== 10) {
+      setError("Phone number must be exactly 10 digits.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: name.trim(),
+          customerPhone: phone.trim(),
+          date, time,
+          staffId: staffId || undefined,
+          notes: notes.trim() || undefined,
+          selectedServices,
+          walkIn: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to create booking.");
+      } else {
+        onSuccess();
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4 shrink-0">
+          <h2 className="text-lg font-bold text-zinc-900">Add Walk-in</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 text-xl leading-none">✕</button>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+          {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600 border border-red-100">{error}</p>}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-500">Name *</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Customer name"
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-500">Phone *</label>
+              <input value={phone} onChange={e => handlePhoneChange(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10-digit number" type="tel" maxLength={10}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none" />
+            </div>
+          </div>
+
+          {/* Existing customer banner */}
+          {lookingUp && (
+            <p className="text-xs text-zinc-400 -mt-2">Looking up customer...</p>
+          )}
+          {knownCustomer && (
+            <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 flex items-center gap-2 -mt-2">
+              <span className="text-blue-500 text-base">👤</span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Returning customer</p>
+                <p className="text-xs text-blue-600">
+                  {knownCustomer.name}
+                  {knownCustomer.lastVisit ? ` · Last visit: ${knownCustomer.lastVisit}` : ""}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-500">Date *</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-500">Time *</label>
+              <input type="time" value={time} onChange={e => setTime(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-500">Stylist</label>
+            <select value={staffId} onChange={e => setStaffId(e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none bg-white">
+              <option value="">Auto-assign</option>
+              {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-500">Services *</label>
+            <div className="flex gap-2">
+              <select value={pickService} onChange={e => setPickService(e.target.value)}
+                className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none bg-white">
+                <option value="">Select a service...</option>
+                {SERVICE_CATEGORIES.map(cat => (
+                  <optgroup key={cat} label={cat}>
+                    {SERVICES.filter(s => s.category === cat).map(s => (
+                      <option key={s.id} value={s.id}>{s.name} — ₹{s.price}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <button onClick={addService} disabled={!pickService}
+                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40 hover:bg-zinc-700">
+                Add
+              </button>
+            </div>
+
+            {selectedServices.length > 0 && (
+              <div className="mt-2 rounded-xl border border-zinc-100 overflow-hidden">
+                {selectedServices.map(s => (
+                  <div key={s.id} className="flex items-center justify-between px-3 py-2 text-sm border-b border-zinc-50 last:border-0">
+                    <span className="text-zinc-700">{s.name}{s.quantity > 1 ? ` ×${s.quantity}` : ""}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-zinc-400">₹{s.price * s.quantity}</span>
+                      <button onClick={() => removeService(s.id)} className="text-red-400 hover:text-red-600 font-bold leading-none">✕</button>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-between px-3 py-2 text-sm font-bold text-zinc-900 bg-zinc-50">
+                  <span>Total</span>
+                  <span>₹{totalPrice} · ~{totalDuration} min</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-500">Notes</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Optional notes..."
+              className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none resize-none" />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-zinc-100 px-6 py-4 shrink-0">
+          <button onClick={submit} disabled={saving}
+            className="w-full rounded-full bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700 disabled:opacity-50 transition">
+            {saving ? "Creating..." : "Confirm Walk-in ✓"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminAppointmentsPage() {
@@ -107,7 +300,8 @@ export default function AdminAppointmentsPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [pendingWa, setPendingWa] = useState<Record<string, { status: string; waLink: string }>>({});
   const [newCount, setNewCount] = useState(0);
-  const [lastKnownIds, setLastKnownIds] = useState<Set<string>>(new Set());;
+  const [lastKnownIds, setLastKnownIds] = useState<Set<string>>(new Set());
+  const [showWalkIn, setShowWalkIn] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -230,8 +424,10 @@ export default function AdminAppointmentsPage() {
           <div className="mt-2">
             {a.servicesJson ? (
               <div className="space-y-0.5">
-                {(JSON.parse(a.servicesJson) as { name: string; price: number }[]).map((s, i) => (
-                  <p key={i} className="text-sm text-zinc-700">{s.name} <span className="text-zinc-400">₹{s.price}</span></p>
+                {(JSON.parse(a.servicesJson) as { name: string; price: number; quantity?: number }[]).map((s, i) => (
+                  <p key={i} className="text-sm text-zinc-700">
+                    {s.name}{(s.quantity ?? 1) > 1 ? ` ×${s.quantity}` : ""} <span className="text-zinc-400">₹{s.price * (s.quantity ?? 1)}</span>
+                  </p>
                 ))}
               </div>
             ) : (
@@ -288,6 +484,13 @@ export default function AdminAppointmentsPage() {
 
   return (
     <div className="flex min-h-screen">
+      {showWalkIn && (
+        <WalkInModal
+          staff={staff}
+          onClose={() => setShowWalkIn(false)}
+          onSuccess={() => { setShowWalkIn(false); load(); }}
+        />
+      )}
       <AdminNav />
       <div className="flex-1 p-4 md:p-8">
 
@@ -318,14 +521,16 @@ export default function AdminAppointmentsPage() {
         )}
 
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-extrabold text-zinc-900">
             Appointments {!loading && <span className="text-base font-normal text-zinc-400">({appointments.length})</span>}
           </h1>
-          <Button variant="ghost" size="sm" onClick={() => load()} className="gap-2">
-            <RefreshCw size={15} /> Refresh
-          </Button>
-          <span className="text-xs text-zinc-400 hidden sm:block">Auto-refreshes every 30s</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button onClick={() => setShowWalkIn(true)}
+              className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-700 transition">
+              <Plus size={14} /> Walk-in
+            </button>
+          </div>
         </div>
 
         {loading ? (

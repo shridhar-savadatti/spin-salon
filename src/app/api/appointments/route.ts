@@ -26,11 +26,14 @@ export async function POST(req: NextRequest) {
       discountCode, discountAmount, finalPrice,
       // Multi-service support
       selectedServices, serviceId,
+      // Walk-in flag: set status to confirmed, skip notifications
+      walkIn,
     } = body as {
       customerName: string; customerPhone: string; date: string; time: string;
       notes?: string; staffId?: string; discountCode?: string;
       discountAmount?: number; finalPrice?: number;
       selectedServices?: SelectedService[]; serviceId?: string;
+      walkIn?: boolean;
     };
 
     if (!customerName || !customerPhone || !date || !time) {
@@ -105,13 +108,18 @@ export async function POST(req: NextRequest) {
         discount_code, discount_amount, final_price, services_json, total_duration
       ) VALUES (
         ${id}, ${customerName}, ${customerPhone}, ${primaryService.id}, ${serviceNames}, ${totalPrice},
-        ${date}, ${time}, ${notes || null}, 'pending', ${createdAt}, ${resolvedStaffId}, ${staffName},
+        ${date}, ${time}, ${notes || null}, ${walkIn ? 'confirmed' : 'pending'}, ${createdAt}, ${resolvedStaffId}, ${staffName},
         ${discountCode || null}, ${discountAmount || 0}, ${actualFinalPrice}, ${servicesJson}, ${totalDuration}
       )
     `;
 
     if (discountCode) {
       await sql`UPDATE offers SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER(${discountCode})`;
+    }
+
+    // Walk-ins are created by admin — skip notifications
+    if (walkIn) {
+      return NextResponse.json({ id, staffName, totalPrice, totalDuration, services, message: "Walk-in created" }, { status: 201 });
     }
 
     // Send push + email notifications (background, won't block response)

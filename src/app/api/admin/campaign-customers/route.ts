@@ -53,6 +53,10 @@ export async function GET(req: NextRequest) {
       SELECT customer_name, customer_phone, service_name, MAX(date) as last_visit
       FROM appointments WHERE status != 'cancelled'
       GROUP BY customer_phone, customer_name, service_name
+      UNION
+      SELECT name as customer_name, phone as customer_phone, 'Imported' as service_name, last_visit
+      FROM customers
+      WHERE phone NOT IN (SELECT DISTINCT customer_phone FROM appointments WHERE status != 'cancelled')
       ORDER BY last_visit DESC LIMIT 500
     ` as Record<string, unknown>[];
   }
