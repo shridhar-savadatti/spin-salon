@@ -14,7 +14,13 @@ export const metadata: Metadata = {
   },
   description:
     "Spin Unisex Salon, Kudlu Gate, Bengaluru — Near HSR Layout. Book online! New clients get 20% off (use WELCOME20). Haircuts, colour, facials, waxing, nails & bridal packages.",
-  keywords: ["unisex salon", "haircut", "hair coloring", "beauty", "balayage", "facial", "nails", "Bengaluru", "Bangalore", "Kudlu", "HSR Layout", "spin salon", "Karnataka"],
+  keywords: [
+    "unisex salon near me", "unisex salon Bengaluru", "unisex salon Kudlu", "unisex salon HSR Layout",
+    "unisex salon Bommanahalli", "unisex salon BTM Layout", "unisex salon Silk Board",
+    "hair salon near me", "best salon Kudlu Gate", "salon near HSR Layout",
+    "haircut", "hair coloring", "balayage", "facial", "waxing", "nails", "bridal makeup",
+    "Spin Unisex Salon", "spinkudlu", "Bengaluru", "Bangalore", "Karnataka",
+  ],
   alternates: { canonical: BASE_URL },
   icons: {
     icon: [
@@ -46,9 +52,9 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "BeautySalon",
+  "@type": ["BeautySalon", "HairSalon"],
   name: "Spin Unisex Salon",
-  description: "Spin Unisex Salon in Kudlu, Bengaluru — premium haircuts, colouring, facials, nails and more. Near HSR Layout.",
+  description: "Spin Unisex Salon — the best unisex salon near Kudlu Gate, HSR Layout, Bommanahalli and Silk Board, Bengaluru. Premium haircuts for men & women, hair colouring, facials, waxing, nails, and bridal packages.",
   url: BASE_URL,
   telephone: "+919164363131",
   email: "spinsalonkudlu2431@gmail.com",
@@ -65,7 +71,13 @@ const jsonLd = {
     latitude: 12.9082,
     longitude: 77.6476,
   },
-  areaServed: ["Kudlu", "HSR Layout", "Bommanahalli", "Silk Board", "BTM Layout", "Bengaluru"],
+  areaServed: ["Kudlu", "Kudlu Gate", "HSR Layout", "Bommanahalli", "Silk Board", "BTM Layout", "Agara", "Hongasandra", "Begur Road", "Bengaluru"],
+  serviceType: "Unisex Salon",
+  amenityFeature: [
+    { "@type": "LocationFeatureSpecification", name: "Unisex Services", value: true },
+    { "@type": "LocationFeatureSpecification", name: "Online Booking", value: true },
+    { "@type": "LocationFeatureSpecification", name: "Walk-ins Welcome", value: true },
+  ],
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
