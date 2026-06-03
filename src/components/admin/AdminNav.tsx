@@ -4,7 +4,7 @@ import Link from "next/link";
 import PushToggle from "@/components/admin/PushToggle";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Calendar, Settings, BarChart2, LogOut, FileText, Megaphone, Menu, X, Tag, Users, Sparkles } from "lucide-react";
+import { Calendar, Settings, BarChart2, LogOut, FileText, Megaphone, Menu, X, Tag, Users, Sparkles, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -17,6 +17,7 @@ const STORE_ITEMS = [
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/offers", label: "Promo Offers", icon: Tag },
   { href: "/admin/announcements", label: "Announcements", icon: Sparkles },
+  { href: "/admin/billing", label: "Billing", icon: Receipt },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
 ];
 

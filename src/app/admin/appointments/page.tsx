@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 import { formatTime, formatCurrency } from "@/lib/utils";
-import { Search, MessageCircle, Plus } from "lucide-react";
+import { Search, MessageCircle, Plus, Receipt } from "lucide-react";
+import BillModal from "@/components/admin/BillModal";
 import { SERVICES, SERVICE_CATEGORIES } from "@/lib/services-data";
 import { SelectedService } from "@/types";
 
@@ -302,6 +303,7 @@ export default function AdminAppointmentsPage() {
   const [newCount, setNewCount] = useState(0);
   const [lastKnownIds, setLastKnownIds] = useState<Set<string>>(new Set());
   const [showWalkIn, setShowWalkIn] = useState(false);
+  const [billingAppt, setBillingAppt] = useState<Appointment | null>(null);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -470,6 +472,12 @@ export default function AdminAppointmentsPage() {
             ✕ Cancel
           </button>
         )}
+        {(a.status === "completed" || a.status === "confirmed") && (
+          <button onClick={() => setBillingAppt(a)}
+            className="flex items-center gap-1 rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-200 transition">
+            <Receipt size={13} /> Bill
+          </button>
+        )}
         {pendingWa[a.id] && (
           <a href={pendingWa[a.id].waLink} target="_blank" rel="noopener noreferrer"
             onClick={() => setPendingWa(prev => { const n = { ...prev }; delete n[a.id]; return n; })}
@@ -489,6 +497,12 @@ export default function AdminAppointmentsPage() {
           staff={staff}
           onClose={() => setShowWalkIn(false)}
           onSuccess={() => { setShowWalkIn(false); load(); }}
+        />
+      )}
+      {billingAppt && (
+        <BillModal
+          appointment={billingAppt}
+          onClose={() => setBillingAppt(null)}
         />
       )}
       <AdminNav />

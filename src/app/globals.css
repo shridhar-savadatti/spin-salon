@@ -62,3 +62,14 @@ html {
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+@media print {
+  body > *:not(#bill-print-area) { display: none !important; }
+  #bill-print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

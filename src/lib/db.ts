@@ -153,6 +153,29 @@ export async function initDb() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS bills (
+      id TEXT PRIMARY KEY,
+      appointment_id TEXT NOT NULL,
+      bill_number TEXT NOT NULL UNIQUE,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT NOT NULL,
+      services_json TEXT NOT NULL,
+      subtotal DECIMAL NOT NULL,
+      discount_amount DECIMAL NOT NULL DEFAULT 0,
+      discount_code TEXT,
+      gst_amount DECIMAL NOT NULL DEFAULT 0,
+      total DECIMAL NOT NULL,
+      payment_method TEXT NOT NULL DEFAULT 'cash',
+      paid SMALLINT NOT NULL DEFAULT 1,
+      notes TEXT,
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      staff_name TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
   // Add link column to announcements if missing
   try {
     await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS link TEXT`;
