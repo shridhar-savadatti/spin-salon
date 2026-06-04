@@ -64,6 +64,7 @@ html {
 }
 
 @media print {
+  /* BillModal print (modal overlay) */
   body > *:not(#bill-print-area) { display: none !important; }
   #bill-print-area {
     position: fixed !important;
@@ -72,4 +73,9 @@ html {
     box-shadow: none !important;
     border-radius: 0 !important;
   }
+
+  /* Invoice detail page print — hide everything, show only invoice card */
+  body:has(#invoice-print) > * { visibility: hidden; }
+  #invoice-print { visibility: visible; position: absolute; left: 0; top: 0; width: 100%; }
+  #invoice-print * { visibility: visible; }
 }
