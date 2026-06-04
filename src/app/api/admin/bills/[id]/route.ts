@@ -38,6 +38,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
     subtotal: Number(r.subtotal), discountAmount: Number(r.discount_amount),
     discountCode: r.discount_code, gstAmount: Number(r.gst_amount),
     total: Number(r.total), paymentMethod: r.payment_method,
-    paid: !!r.paid, date: r.date, time: r.time, staffName: r.staff_name,
+    paid: !!r.paid, date: r.date, time: r.time, staffName: r.staff_name, notes: r.notes ?? null,
   });
 }

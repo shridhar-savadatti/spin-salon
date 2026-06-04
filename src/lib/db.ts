@@ -156,7 +156,7 @@ export async function initDb() {
   await sql`
     CREATE TABLE IF NOT EXISTS bills (
       id TEXT PRIMARY KEY,
-      appointment_id TEXT NOT NULL,
+      appointment_id TEXT,
       bill_number TEXT NOT NULL UNIQUE,
       customer_name TEXT NOT NULL,
       customer_phone TEXT NOT NULL,

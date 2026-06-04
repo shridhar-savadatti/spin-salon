@@ -3,11 +3,42 @@ import { getSql } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { generateId } from "@/lib/utils";
 
+async function ensureBillsTable() {
+  const sql = getSql();
+  // Drop NOT NULL constraints that block POS (walk-in) bills
+  try { await sql`ALTER TABLE bills ALTER COLUMN appointment_id DROP NOT NULL`; } catch { /* ok */ }
+  try { await sql`ALTER TABLE bills ALTER COLUMN customer_phone DROP NOT NULL`; } catch { /* ok */ }
+  await sql`
+    CREATE TABLE IF NOT EXISTS bills (
+      id TEXT PRIMARY KEY,
+      appointment_id TEXT NULL,
+      bill_number TEXT NOT NULL UNIQUE,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT,
+      services_json TEXT NOT NULL,
+      subtotal DECIMAL NOT NULL,
+      discount_amount DECIMAL NOT NULL DEFAULT 0,
+      discount_code TEXT,
+      gst_amount DECIMAL NOT NULL DEFAULT 0,
+      total DECIMAL NOT NULL,
+      payment_method TEXT NOT NULL DEFAULT 'cash',
+      paid SMALLINT NOT NULL DEFAULT 1,
+      notes TEXT,
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      staff_name TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await ensureBillsTable();
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
@@ -51,16 +82,20 @@ export async function POST(req: NextRequest) {
     paymentMethod, notes, date, time, staffName,
   } = body;
 
-  if (!appointmentId || !customerName || !total) {
+  if (!customerName || total === undefined || total === null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  try {
+  await ensureBillsTable();
   const sql = getSql();
 
-  // Check if bill already exists for this appointment
-  const existing = await sql`SELECT bill_number FROM bills WHERE appointment_id = ${appointmentId}`;
-  if (existing[0]) {
-    return NextResponse.json({ billNumber: (existing[0] as { bill_number: string }).bill_number, alreadyExists: true });
+  // Check if bill already exists for this appointment (only if appointmentId provided)
+  if (appointmentId) {
+    const existing = await sql`SELECT bill_number FROM bills WHERE appointment_id = ${appointmentId}`;
+    if (existing[0]) {
+      return NextResponse.json({ billNumber: (existing[0] as { bill_number: string }).bill_number, alreadyExists: true });
+    }
   }
 
   // Generate sequential bill number for today: SPIN-YYYYMMDD-NNN
@@ -87,4 +122,9 @@ export async function POST(req: NextRequest) {
   `;
 
   return NextResponse.json({ id, billNumber }, { status: 201 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Bills POST error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
