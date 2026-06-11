@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Salon Management System — Feature Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #18181b; background: #fff; font-size: 13px; line-height: 1.6; }
+
+  .cover {
+    min-height: 100vh;
+    background: #09090b;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px;
+    page-break-after: always;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #27272a;
+    color: #a1a1aa;
+    border: 1px solid #3f3f46;
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .cover h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+  .cover h1 span { color: #a1a1aa; }
+  .cover p.sub { font-size: 18px; color: #71717a; max-width: 520px; margin-bottom: 48px; line-height: 1.7; }
+  .cover .meta { color: #52525b; font-size: 12px; }
+  .cover .meta strong { color: #a1a1aa; }
+
+  .cover-grid {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .cover-stat {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .cover-stat .num { font-size: 28px; font-weight: 800; color: #fff; }
+  .cover-stat .lbl { font-size: 11px; color: #71717a; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .page { padding: 56px 60px; }
+  .page + .page { border-top: 1px solid #f4f4f5; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #a1a1aa;
+    margin-bottom: 8px;
+  }
+  h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  h2 + p { color: #71717a; font-size: 13px; margin-bottom: 32px; }
+
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .feature-card {
+    border: 1px solid #e4e4e7;
+    border-radius: 14px;
+    padding: 22px 24px;
+    background: #fafafa;
+  }
+  .feature-card .icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .feature-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .feature-card p { font-size: 12px; color: #71717a; line-height: 1.6; }
+  .feature-card ul { font-size: 12px; color: #52525b; padding-left: 16px; margin-top: 8px; }
+  .feature-card ul li { margin-bottom: 3px; }
+
+  .highlight-card {
+    background: #09090b;
+    color: #fff;
+    border: none;
+  }
+  .highlight-card h3 { color: #fff; }
+  .highlight-card p { color: #a1a1aa; }
+  .highlight-card ul { color: #d4d4d8; }
+
+  .full-card {
+    border: 1px solid #e4e4e7;
+    border-radius: 14px;
+    padding: 22px 24px;
+    background: #fafafa;
+    margin-bottom: 16px;
+  }
+  .full-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .full-card p { font-size: 12px; color: #71717a; }
+  .full-card ul { font-size: 12px; color: #52525b; padding-left: 16px; margin-top: 8px; }
+  .full-card ul li { margin-bottom: 3px; }
+
+  .three-col { grid-template-columns: 1fr 1fr 1fr; }
+
+  .tag {
+    display: inline-block;
+    background: #f4f4f5;
+    color: #52525b;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag.green { background: #dcfce7; color: #16a34a; }
+  .tag.blue { background: #dbeafe; color: #1d4ed8; }
+  .tag.purple { background: #f3e8ff; color: #7c3aed; }
+
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+  }
+  .pricing-table th {
+    background: #09090b;
+    color: #fff;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .pricing-table th:first-child { border-radius: 10px 0 0 10px; }
+  .pricing-table th:last-child { border-radius: 0 10px 10px 0; }
+  .pricing-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f4f4f5;
+    font-size: 12px;
+    vertical-align: top;
+  }
+  .pricing-table tr:last-child td { border-bottom: none; }
+  .pricing-table td:first-child { font-weight: 600; }
+  .check { color: #16a34a; font-weight: 700; }
+
+  .footer-page {
+    background: #09090b;
+    color: #fff;
+    padding: 56px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 320px;
+  }
+  .footer-page h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+  .footer-page p { color: #71717a; max-width: 480px; font-size: 13px; }
+  .footer-page .contact { margin-top: 40px; }
+  .footer-page .contact p { color: #a1a1aa; margin-bottom: 4px; }
+  .footer-page .contact strong { color: #fff; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    .cover {
+      min-height: auto;
+      height: auto;
+      padding: 52px 48px 44px;
+      page-break-after: always;
+      break-after: page;
+    }
+    .cover h1 { font-size: 36px; }
+    .cover p.sub { font-size: 14px; margin-bottom: 28px; }
+    .cover-grid { margin-top: 32px; gap: 10px; }
+    .cover-stat { padding: 14px 18px; }
+    .cover-stat .num { font-size: 22px; }
+
+    .page { padding: 28px 48px; }
+    .footer-page { padding: 36px 48px; min-height: auto; }
+
+    .feature-grid { gap: 10px; }
+    .feature-card { page-break-inside: avoid; break-inside: avoid; padding: 16px 18px; }
+    .feature-card p, .feature-card ul { font-size: 11px; }
+    .feature-card h3 { font-size: 12px; }
+    .feature-card .icon { font-size: 18px; margin-bottom: 6px; }
+
+    h2 { font-size: 18px; margin-bottom: 4px; }
+    h2 + p { margin-bottom: 20px; }
+    .section-label { margin-bottom: 6px; }
+
+    .pricing-table th, .pricing-table td { padding: 8px 12px; font-size: 11px; }
+    .tag { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">Salon Management Platform</div>
+  <h1>Everything your salon<br/><span>needs to grow.</span></h1>
+  <p class="sub">A complete digital system — online booking, billing POS, customer management, campaigns, and more. Built specifically for modern salons.</p>
+  <div class="meta">
+    Prepared for: <strong>U &amp; Me Women's Salon</strong> &nbsp;·&nbsp; June 2026
+  </div>
+
+  <div class="cover-grid">
+    <div class="cover-stat">
+      <div class="num">12+</div>
+      <div class="lbl">Core Features</div>
+    </div>
+    <div class="cover-stat">
+      <div class="num">24/7</div>
+      <div class="lbl">Online Booking</div>
+    </div>
+    <div class="cover-stat">
+      <div class="num">100%</div>
+      <div class="lbl">Mobile Ready</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1: CUSTOMER-FACING -->
+<div class="page">
+  <div class="section-label">Section 01</div>
+  <h2>Customer-Facing Features</h2>
+  <p>What your customers see and interact with on your website.</p>
+
+  <div class="feature-grid">
+    <div class="feature-card highlight-card">
+      <div class="icon">📅</div>
+      <h3>Online Appointment Booking</h3>
+      <p>Customers book 24/7 from any device — no calls needed. Choose service, stylist, date and time in under 2 minutes.</p>
+      <ul>
+        <li>Multi-service booking in one go</li>
+        <li>Quantity selector (e.g. 2× Haircut)</li>
+        <li>Stylist preference selection</li>
+        <li>GST-inclusive pricing shown upfront</li>
+        <li>Promo code / discount support</li>
+        <li>WhatsApp confirmation on booking</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📢</div>
+      <h3>Live Announcement Bar</h3>
+      <p>A scrolling banner at the top of the site showing your current offers — updated from the admin panel instantly.</p>
+      <ul>
+        <li>Multiple offers scroll automatically</li>
+        <li>Color-coded per offer</li>
+        <li>Clicking takes customer to booking</li>
+        <li>Admin can add/remove any time</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">✨</div>
+      <h3>Hero Offer Badge</h3>
+      <p>Your top offer is highlighted as a glowing badge on the homepage hero — front and center for every visitor.</p>
+      <ul>
+        <li>Links directly to booking with service pre-selected</li>
+        <li>Color matches the announcement bar</li>
+        <li>Zero-click path to conversion</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">💬</div>
+      <h3>WhatsApp &amp; Call CTAs</h3>
+      <p>Book, Call, and WhatsApp buttons prominently placed for customers who prefer direct contact.</p>
+      <ul>
+        <li>Pre-filled WhatsApp messages</li>
+        <li>Click tracking via analytics</li>
+        <li>Works on mobile natively</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">🗺️</div>
+      <h3>Location &amp; SEO</h3>
+      <p>Your salon shows up in "unisex salon near me" searches with structured data, FAQs, and neighbourhood coverage built in.</p>
+      <ul>
+        <li>Google Business Schema markup</li>
+        <li>FAQ section for local search</li>
+        <li>Neighbourhood chips (HSR, Silk Board…)</li>
+        <li>Sitemap + robots.txt</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">⭐</div>
+      <h3>Testimonials &amp; Gallery</h3>
+      <p>Showcase customer reviews and a photo gallery to build trust and drive conversions.</p>
+      <ul>
+        <li>Star ratings displayed</li>
+        <li>Mobile-optimised gallery</li>
+        <li>Services highlight section</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: ADMIN -->
+<div class="page">
+  <div class="section-label">Section 02</div>
+  <h2>Admin Dashboard</h2>
+  <p>Everything you need to run the salon — from one screen, on any device.</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🔔</div>
+      <h3>Real-Time Booking Alerts</h3>
+      <p>Never miss a booking. The admin panel sounds a loud alarm and flashes a banner the moment a new booking comes in.</p>
+      <ul>
+        <li>Loud repeating alarm until dismissed</li>
+        <li>Push notifications on phone</li>
+        <li>App icon badge count</li>
+        <li>Auto-polls every 30 seconds</li>
+      </ul>
+    </div>
+
+    <div class="feature-card highlight-card">
+      <div class="icon">🧾</div>
+      <h3>Billing POS</h3>
+      <p>A full point-of-sale terminal. Add services, search customer, apply discount, charge — and print or WhatsApp the invoice.</p>
+      <ul>
+        <li>Service grid with category tabs</li>
+        <li>Customer search with visit history</li>
+        <li>% or flat discount</li>
+        <li>Cash / UPI / Card payment</li>
+        <li>GST split (CGST + SGST)</li>
+        <li>Professional invoice with print/PDF</li>
+        <li>WhatsApp invoice to customer</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📋</div>
+      <h3>Appointments Management</h3>
+      <p>View, confirm, complete or cancel all bookings. Filter by status, stylist, date or search by name.</p>
+      <ul>
+        <li>Walk-in booking from admin</li>
+        <li>Stylist assignment</li>
+        <li>Status workflow: Pending → Confirmed → Completed</li>
+        <li>WhatsApp notify on status change</li>
+        <li>Past &amp; upcoming grouped by date</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">👥</div>
+      <h3>Customer Directory</h3>
+      <p>All your customers in one place — from bookings and imports. See visit count, last visit, and message them on WhatsApp.</p>
+      <ul>
+        <li>Search by name or phone</li>
+        <li>Visit count &amp; last visit date</li>
+        <li>One-tap WhatsApp button</li>
+        <li>Import from Excel</li>
+        <li>Auto-populated from bookings</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📣</div>
+      <h3>Campaign Messaging</h3>
+      <p>Send personalised WhatsApp messages to customers in bulk — target by last visit date or service type.</p>
+      <ul>
+        <li>Custom message templates</li>
+        <li>Filter: "visited 4+ weeks ago"</li>
+        <li>Filter: by service category</li>
+        <li>Track sent / total count</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">🏷️</div>
+      <h3>Promo Offer Codes</h3>
+      <p>Create and manage discount codes for new or returning customers — percentage or fixed amount.</p>
+      <ul>
+        <li>Code: WELCOME20, FLAT200, etc.</li>
+        <li>Set expiry date &amp; max uses</li>
+        <li>New client / all client targeting</li>
+        <li>Usage count tracking</li>
+        <li>Enable / disable instantly</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: MORE FEATURES -->
+<div class="page">
+  <div class="section-label">Section 03</div>
+  <h2>More Features</h2>
+  <p>Additional tools that complete the platform.</p>
+
+  <div class="feature-grid three-col">
+    <div class="feature-card">
+      <div class="icon">🕐</div>
+      <h3>Slot Management</h3>
+      <p>Control which time slots are available for booking. Block specific slots or entire days.</p>
+      <ul>
+        <li>Toggle slots on/off</li>
+        <li>Block by stylist or all</li>
+        <li>Prevents double-booking</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Analytics</h3>
+      <p>Track website visits, booking volume, revenue, call clicks and WhatsApp button taps.</p>
+      <ul>
+        <li>Page views dashboard</li>
+        <li>Revenue from completed bookings</li>
+        <li>Booking status breakdown</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📝</div>
+      <h3>Blog / Content</h3>
+      <p>Publish blog posts to drive organic traffic and establish authority in your area.</p>
+      <ul>
+        <li>Rich text editor</li>
+        <li>SEO slug &amp; cover image</li>
+        <li>Publish / draft toggle</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">💰</div>
+      <h3>Revenue Dashboard</h3>
+      <p>See today's revenue, this month's total, average bill value, and payment method breakdown at a glance.</p>
+      <ul>
+        <li>Date range filter</li>
+        <li>Cash / UPI / Card split</li>
+        <li>Avg bill value</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">🌐</div>
+      <h3>Announcements Manager</h3>
+      <p>Add, edit or remove scrolling offers from the admin panel — no developer needed.</p>
+      <ul>
+        <li>Live preview before saving</li>
+        <li>Custom link per offer</li>
+        <li>Color picker (6 colors)</li>
+      </ul>
+    </div>
+
+    <div class="feature-card highlight-card">
+      <div class="icon">📱</div>
+      <h3>Mobile PWA</h3>
+      <p>Install the admin panel on your phone like an app — works offline, with push notifications and badge counts.</p>
+      <ul>
+        <li>Install on iPhone &amp; Android</li>
+        <li>Push alerts for new bookings</li>
+        <li>App icon badge count</li>
+        <li>No App Store needed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top: 32px;">
+    <div class="section-label" style="margin-bottom: 12px;">Technology Stack</div>
+    <span class="tag green">Next.js 16</span>
+    <span class="tag green">React</span>
+    <span class="tag blue">Neon PostgreSQL</span>
+    <span class="tag blue">Vercel Cloud</span>
+    <span class="tag purple">WhatsApp API</span>
+    <span class="tag purple">Web Push</span>
+    <span class="tag">TypeScript</span>
+    <span class="tag">Tailwind CSS</span>
+    <span class="tag">99.9% Uptime SLA</span>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="page">
+  <div class="section-label">Section 04</div>
+  <h2>What's Included</h2>
+  <p>Everything in one package — no hidden fees, no per-module charges.</p>
+
+  <table class="pricing-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Included</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Online Booking Website</td>
+        <td><span class="check">✓</span></td>
+        <td>Custom domain (e.g. yoursalon.com)</td>
+      </tr>
+      <tr>
+        <td>Admin Dashboard</td>
+        <td><span class="check">✓</span></td>
+        <td>Mobile + desktop, secure login</td>
+      </tr>
+      <tr>
+        <td>Appointments Management</td>
+        <td><span class="check">✓</span></td>
+        <td>Unlimited bookings</td>
+      </tr>
+      <tr>
+        <td>Billing POS + Invoices</td>
+        <td><span class="check">✓</span></td>
+        <td>Print, PDF, WhatsApp</td>
+      </tr>
+      <tr>
+        <td>Customer Directory</td>
+        <td><span class="check">✓</span></td>
+        <td>Unlimited customers</td>
+      </tr>
+      <tr>
+        <td>WhatsApp Campaign Messaging</td>
+        <td><span class="check">✓</span></td>
+        <td>Bulk messaging to customers</td>
+      </tr>
+      <tr>
+        <td>Promo Codes &amp; Discounts</td>
+        <td><span class="check">✓</span></td>
+        <td>Unlimited codes</td>
+      </tr>
+      <tr>
+        <td>Push Notifications</td>
+        <td><span class="check">✓</span></td>
+        <td>New booking alerts on phone</td>
+      </tr>
+      <tr>
+        <td>Blog / Content Management</td>
+        <td><span class="check">✓</span></td>
+        <td>SEO-optimised posts</td>
+      </tr>
+      <tr>
+        <td>Analytics Dashboard</td>
+        <td><span class="check">✓</span></td>
+        <td>Revenue, visits, conversions</td>
+      </tr>
+      <tr>
+        <td>Hosting &amp; Database</td>
+        <td><span class="check">✓</span></td>
+        <td>Vercel + Neon, 99.9% uptime</td>
+      </tr>
+      <tr>
+        <td>SSL Certificate</td>
+        <td><span class="check">✓</span></td>
+        <td>HTTPS included</td>
+      </tr>
+      <tr>
+        <td>WhatsApp Business API Setup</td>
+        <td><span class="check">✓</span></td>
+        <td>Meta-approved integration</td>
+      </tr>
+      <tr>
+        <td>Ongoing Support &amp; Updates</td>
+        <td><span class="check">✓</span></td>
+        <td>Per agreed terms</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-page">
+  <div>
+    <h2>Ready to get started?</h2>
+    <p>Let's build the same system for U &amp; Me Women's Salon — customised with your services, branding, and location.</p>
+  </div>
+  <div class="contact">
+    <p>Contact</p>
+    <p><strong>Shridhar Savadatti</strong></p>
+    <p style="margin-top:4px; color: #52525b; font-size:11px;">This document is confidential and prepared exclusively for U &amp; Me Women's Salon.</p>
+  </div>
+</div>
+
+</body>
+</html>

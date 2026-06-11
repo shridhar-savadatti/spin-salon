@@ -134,8 +134,8 @@ function BookingForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: promoCode, phone: form.phone, servicePrice: grandTotal,
-          category: selectedServices.length === 1 ? selectedServices[0].category : undefined,
+          code: promoCode, phone: form.phone, servicePrice: subtotal,
+          categories: [...new Set(selectedServices.map(s => s.category))],
         }),
       });
       const data = await res.json();
@@ -463,7 +463,7 @@ function BookingForm() {
 
             <div className="space-y-4">
               <Input label="Full Name" id="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" />
-              <Input label="Phone Number" id="phone" type="tel" required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91 91643 63131" />
+              <Input label="Phone Number" id="phone" type="tel" required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })} placeholder="10-digit mobile number" maxLength={10} inputMode="numeric" />
               <div>
                 <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-zinc-700">Notes (optional)</label>
                 <textarea id="notes" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}

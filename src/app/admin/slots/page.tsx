@@ -137,7 +137,7 @@ export default function AdminSlotsPage() {
     <div className="flex min-h-screen bg-zinc-50">
       <AdminNav />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4 md:p-8">
         <h1 className="mb-1 text-2xl font-extrabold text-zinc-900">Manage Time Slots</h1>
         <p className="mb-8 text-sm text-zinc-500">Control which time slots are available for booking.</p>
 

@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Offer } from "@/types";
 import { SERVICE_CATEGORIES } from "@/lib/services-data";
-import { PlusCircle, Trash2, ToggleLeft, ToggleRight, Tag, RefreshCw } from "lucide-react";
+import { PlusCircle, Trash2, ToggleLeft, ToggleRight, Tag } from "lucide-react";
 
 export default function AdminOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -88,8 +88,7 @@ export default function AdminOffersPage() {
             <p className="mt-0.5 text-sm text-zinc-500">Create discount codes for customers</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={load} className="gap-2"><RefreshCw size={14} /></Button>
-            <Button size="sm" className="gap-2" onClick={() => setShowForm(true)}>
+<Button size="sm" className="gap-2" onClick={() => setShowForm(true)}>
               <PlusCircle size={15} /> New Offer
             </Button>
           </div>

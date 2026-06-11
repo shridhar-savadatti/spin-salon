@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import AdminNav from "@/components/admin/AdminNav";
 import { BlogPost } from "@/types";
-import { PlusCircle, Edit2, Trash2, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { PlusCircle, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 function formatDate(iso: string) {
@@ -48,17 +48,14 @@ export default function AdminBlogPage() {
   return (
     <div className="flex min-h-screen bg-zinc-50">
       <AdminNav />
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4 md:p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-extrabold text-zinc-900">Blog Posts</h1>
             <p className="mt-0.5 text-sm text-zinc-500">{posts.filter(p => p.published).length} published · {posts.filter(p => !p.published).length} drafts</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={fetchPosts} className="gap-2">
-              <RefreshCw size={14} /> Refresh
-            </Button>
-            <Link href="/admin/blog/new">
+<Link href="/admin/blog/new">
               <Button size="sm" className="gap-2"><PlusCircle size={15} /> New Post</Button>
             </Link>
           </div>

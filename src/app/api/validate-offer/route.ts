@@ -4,7 +4,7 @@ import { getSql } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const { code, phone, servicePrice, category } = await req.json();
+  const { code, phone, servicePrice, categories } = await req.json();
 
   if (!code || !phone || !servicePrice) {
     return NextResponse.json({ error: "Code, phone and service price required" }, { status: 400 });
@@ -37,11 +37,15 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
   }
 
-  // Check category filter
-  if (offer.category_filter && category && offer.category_filter !== category) {
-    return NextResponse.json({
-      error: `This code is valid only for ${offer.category_filter} services`,
-    }, { status: 400 });
+  // Check category filter — all selected categories must match
+  if (offer.category_filter) {
+    const cats: string[] = Array.isArray(categories) ? categories : [];
+    const mismatch = cats.length === 0 || cats.some((c: string) => c !== offer.category_filter);
+    if (mismatch) {
+      return NextResponse.json({
+        error: `This code is valid only for ${offer.category_filter} services`,
+      }, { status: 400 });
+    }
   }
 
   // Check new customer eligibility

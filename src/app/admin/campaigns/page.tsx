@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import AdminNav from "@/components/admin/AdminNav";
 import { Campaign } from "@/types";
-import { PlusCircle, Send, Trash2, RefreshCw, Users, CheckCircle2 } from "lucide-react";
+import { PlusCircle, Send, Trash2, Users, CheckCircle2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 
@@ -36,7 +36,7 @@ export default function CampaignsPage() {
   return (
     <div className="flex min-h-screen bg-zinc-50">
       <AdminNav />
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4 md:p-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -44,10 +44,7 @@ export default function CampaignsPage() {
             <p className="mt-0.5 text-sm text-zinc-500">Send WhatsApp offers to filtered customers</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={fetchCampaigns} className="gap-2">
-              <RefreshCw size={14} /> Refresh
-            </Button>
-            <Link href="/admin/campaigns/new">
+<Link href="/admin/campaigns/new">
               <Button size="sm" className="gap-2"><PlusCircle size={15} /> New Campaign</Button>
             </Link>
           </div>
