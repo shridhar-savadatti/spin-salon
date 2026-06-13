@@ -101,6 +101,9 @@ export default function BillingPOS() {
   const [showCustomer, setShowCustomer] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletBonusBalance, setWalletBonusBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
 
   // History state
   const today = new Date().toISOString().split("T")[0];
@@ -141,6 +144,24 @@ export default function BillingPOS() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Load wallet balance for selected customer
+  useEffect(() => {
+    setUseWallet(false);
+    if (!customer?.phone) {
+      setWalletBalance(0);
+      setWalletBonusBalance(0);
+      return;
+    }
+    fetch(`/api/admin/wallet/${encodeURIComponent(customer.phone)}`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setWalletBalance(data.balance);
+          setWalletBonusBalance(data.bonusBalance);
+        }
+      });
+  }, [customer?.phone]);
+
   const filtered = SERVICES.filter(s =>
     (activeCategory === null || s.category === activeCategory) &&
     (!search || s.name.toLowerCase().includes(search.toLowerCase()))
@@ -156,6 +177,10 @@ export default function BillingPOS() {
   const afterDiscount = subtotal - discountAmt;
   const gstAmt = Math.round(afterDiscount * GST_RATE);
   const total = afterDiscount + gstAmt;
+
+  const walletAvailable = walletBalance + walletBonusBalance;
+  const walletAmount = useWallet ? Math.min(total, walletAvailable) : 0;
+  const remainingAmount = total - walletAmount;
 
   const addItem = (svc: typeof SERVICES[0]) => {
     setCart(prev => {
@@ -200,6 +225,7 @@ export default function BillingPOS() {
           discountAmount: discountAmt,
           gstAmount: gstAmt,
           total,
+          walletAmount,
           paymentMethod,
           notes: notes.trim() || null,
           date: today,
@@ -550,6 +576,18 @@ export default function BillingPOS() {
               )}
             </div>
 
+            {/* Wallet balance toggle */}
+            {walletAvailable > 0 && (
+              <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 cursor-pointer">
+                <span className="flex items-center gap-2 text-xs font-semibold text-zinc-600">
+                  <input type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded accent-zinc-900" />
+                  Use Wallet Balance
+                </span>
+                <span className="text-xs font-bold text-green-600">{formatCurrency(walletAvailable)} available</span>
+              </label>
+            )}
+
             {/* Totals */}
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
@@ -560,30 +598,42 @@ export default function BillingPOS() {
               <div className="flex justify-between border-t border-zinc-200 pt-2 font-bold text-zinc-900 text-base">
                 <span>Total</span><span>{formatCurrency(total)}</span>
               </div>
+              {walletAmount > 0 && (
+                <>
+                  <div className="flex justify-between text-green-600"><span>Wallet</span><span>−{formatCurrency(walletAmount)}</span></div>
+                  <div className="flex justify-between border-t border-zinc-200 pt-2 font-bold text-zinc-900 text-base">
+                    <span>{remainingAmount === 0 ? "Fully Paid by Wallet" : "Balance Due"}</span><span>{formatCurrency(remainingAmount)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Payment method */}
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">Payment</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {PAYMENT_METHODS.map(m => (
-                  <button key={m.value} onClick={() => setPaymentMethod(m.value)}
-                    className={`rounded-xl py-2 text-xs font-semibold transition-all ${
-                      paymentMethod === m.value ? "bg-zinc-900 text-white shadow-sm" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                    }`}>
-                    {m.label}
-                  </button>
-                ))}
+            {remainingAmount > 0 && (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">Payment</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PAYMENT_METHODS.map(m => (
+                    <button key={m.value} onClick={() => setPaymentMethod(m.value)}
+                      className={`rounded-xl py-2 text-xs font-semibold transition-all ${
+                        paymentMethod === m.value ? "bg-zinc-900 text-white shadow-sm" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Charge button */}
             <button onClick={handleCheckout} disabled={cart.length === 0 || processing}
               className="w-full rounded-full bg-zinc-900 py-3.5 text-sm font-bold text-white hover:bg-zinc-700 disabled:opacity-40 transition flex items-center justify-center gap-2">
               {processing ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+              ) : remainingAmount === 0 && walletAmount > 0 ? (
+                `Charge via Wallet`
               ) : (
-                `Charge ${formatCurrency(total)}`
+                `Charge ${formatCurrency(remainingAmount)}`
               )}
             </button>
 

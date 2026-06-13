@@ -16,6 +16,10 @@ interface BillDetail {
   discountCode: string | null;
   gstAmount: number;
   total: number;
+  walletAmount: number;
+  walletTransactionId: string | null;
+  walletBalanceAfter: number | null;
+  walletBonusBalanceAfter: number | null;
   paymentMethod: string;
   paid: boolean;
   notes: string | null;
@@ -73,8 +77,17 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
   const cgst = Math.round(bill.gstAmount / 2);
   const sgst = bill.gstAmount - cgst;
   const waPhone = bill.customerPhone ? (bill.customerPhone.replace(/\D/g, "").length === 10 ? `91${bill.customerPhone.replace(/\D/g, "")}` : bill.customerPhone.replace(/\D/g, "")) : "";
+  const remainingAmount = bill.total - bill.walletAmount;
+  const paymentLine = bill.walletAmount > 0
+    ? remainingAmount > 0
+      ? `Payment: ₹${bill.walletAmount} Wallet + ₹${remainingAmount} ${bill.paymentMethod.toUpperCase()} ✓`
+      : `Payment: Wallet ✓`
+    : `Payment: ${bill.paymentMethod.toUpperCase()} ✓`;
+  const walletLine = bill.walletAmount > 0 && bill.walletBalanceAfter !== null
+    ? `\n\nWallet Balance: ₹${bill.walletBalanceAfter}${bill.walletBonusBalanceAfter ? ` (+₹${bill.walletBonusBalanceAfter} bonus)` : ""}`
+    : "";
   const waMsg = encodeURIComponent(
-    `🧾 *Invoice from Spin Unisex Salon*\nBill No: ${bill.billNumber}\n\nCustomer: ${bill.customerName}\nDate: ${formatDate(bill.date)} · ${formatTime(bill.time)}\n\nServices:\n${services.map(s => `• ${s.name}${(s.quantity ?? 1) > 1 ? ` ×${s.quantity}` : ""} — ₹${s.price * (s.quantity ?? 1)}`).join("\n")}\n\nSubtotal: ₹${bill.subtotal}\nCGST (2.5%): ₹${cgst}\nSGST (2.5%): ₹${sgst}\n*Total: ₹${bill.total}*\n\nPayment: ${bill.paymentMethod.toUpperCase()} ✓\n\nThank you for visiting! 🙏\nspinkudlu.com/booking`
+    `🧾 *Invoice from Spin Unisex Salon*\nBill No: ${bill.billNumber}\n\nCustomer: ${bill.customerName}\nDate: ${formatDate(bill.date)} · ${formatTime(bill.time)}\n\nServices:\n${services.map(s => `• ${s.name}${(s.quantity ?? 1) > 1 ? ` ×${s.quantity}` : ""} — ₹${s.price * (s.quantity ?? 1)}`).join("\n")}\n\nSubtotal: ₹${bill.subtotal}\nCGST (2.5%): ₹${cgst}\nSGST (2.5%): ₹${sgst}\n*Total: ₹${bill.total}*\n\n${paymentLine}${walletLine}\n\nThank you for visiting! 🙏\nspinkudlu.com/booking`
   );
 
   return (
@@ -100,7 +113,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
             </a>
             <span className="ml-auto rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-              PAID
+              {bill.walletAmount > 0 ? (remainingAmount === 0 ? "PAID · WALLET" : "PAID · WALLET + " + bill.paymentMethod.toUpperCase()) : "PAID"}
             </span>
           </div>
 
@@ -183,6 +196,18 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                   <span>Total</span>
                   <span className="tabular-nums">₹{bill.total}</span>
                 </div>
+                {bill.walletAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-green-600">
+                      <span>Paid via Wallet</span>
+                      <span className="tabular-nums">−₹{bill.walletAmount}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-zinc-200 pt-1.5 font-semibold text-zinc-900">
+                      <span>{remainingAmount === 0 ? "Balance" : `Paid via ${bill.paymentMethod.toUpperCase()}`}</span>
+                      <span className="tabular-nums">₹{remainingAmount}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -193,8 +218,18 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                 <p className="text-xs font-semibold text-green-700">Payment Received</p>
               </div>
               <p className="text-xs text-green-600">
-                ₹{bill.total} via {bill.paymentMethod.toUpperCase()} · {formatDate(bill.date)}
+                {bill.walletAmount > 0
+                  ? remainingAmount > 0
+                    ? `₹${bill.walletAmount} via Wallet + ₹${remainingAmount} via ${bill.paymentMethod.toUpperCase()} · ${formatDate(bill.date)}`
+                    : `₹${bill.total} via Wallet · ${formatDate(bill.date)}`
+                  : `₹${bill.total} via ${bill.paymentMethod.toUpperCase()} · ${formatDate(bill.date)}`}
               </p>
+              {bill.walletAmount > 0 && bill.walletBalanceAfter !== null && (
+                <p className="text-xs text-green-600 mt-0.5">
+                  Wallet balance after: ₹{bill.walletBalanceAfter}
+                  {bill.walletBonusBalanceAfter ? ` (+₹${bill.walletBonusBalanceAfter} bonus)` : ""}
+                </p>
+              )}
             </div>
 
             {/* Notes */}

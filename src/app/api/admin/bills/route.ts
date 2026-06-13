@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { generateId } from "@/lib/utils";
+import { ensureWalletTables, deductWallet, linkWalletTransactionToBill } from "@/lib/wallet";
 
 async function ensureBillsTable() {
   const sql = getSql();
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await ensureBillsTable();
+  await ensureWalletTables();
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
@@ -61,6 +63,8 @@ export async function GET(req: NextRequest) {
     discountCode: r.discount_code,
     gstAmount: Number(r.gst_amount),
     total: Number(r.total),
+    walletAmount: Number(r.wallet_amount ?? 0),
+    walletTransactionId: r.wallet_transaction_id ?? null,
     paymentMethod: r.payment_method,
     paid: !!r.paid,
     notes: r.notes,
@@ -79,16 +83,38 @@ export async function POST(req: NextRequest) {
   const {
     appointmentId, customerName, customerPhone, servicesJson,
     subtotal, discountAmount, discountCode, gstAmount, total,
-    paymentMethod, notes, date, time, staffName,
+    walletAmount, paymentMethod, notes, date, time, staffName,
   } = body;
 
   if (!customerName || total === undefined || total === null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  const walletAmt = Number(walletAmount) || 0;
+  if (walletAmt > 0 && !customerPhone) {
+    return NextResponse.json({ error: "A customer phone number is required to use wallet balance" }, { status: 400 });
+  }
+
   try {
   await ensureBillsTable();
+  await ensureWalletTables();
   const sql = getSql();
+
+  let walletTransactionId: string | null = null;
+  if (walletAmt > 0) {
+    const tx = await deductWallet({
+      customerPhone,
+      customerName,
+      amount: walletAmt,
+      referenceType: "bill",
+      referenceId: null,
+      notes: null,
+    });
+    if (!tx) {
+      return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
+    }
+    walletTransactionId = tx.id;
+  }
 
   // Check if bill already exists for this appointment (only if appointmentId provided)
   if (appointmentId) {
@@ -111,15 +137,19 @@ export async function POST(req: NextRequest) {
     INSERT INTO bills (
       id, appointment_id, bill_number, customer_name, customer_phone,
       services_json, subtotal, discount_amount, discount_code, gst_amount,
-      total, payment_method, paid, notes, date, time, staff_name, created_at
+      total, wallet_amount, wallet_transaction_id, payment_method, paid, notes, date, time, staff_name, created_at
     ) VALUES (
       ${id}, ${appointmentId}, ${billNumber}, ${customerName}, ${customerPhone},
       ${typeof servicesJson === "string" ? servicesJson : JSON.stringify(servicesJson)},
       ${subtotal}, ${discountAmount || 0}, ${discountCode || null}, ${gstAmount},
-      ${total}, ${paymentMethod || "cash"}, 1, ${notes || null},
+      ${total}, ${walletAmt}, ${walletTransactionId}, ${paymentMethod || "cash"}, 1, ${notes || null},
       ${date}, ${time}, ${staffName || null}, ${now}
     )
   `;
+
+  if (walletTransactionId) {
+    await linkWalletTransactionToBill(walletTransactionId, id);
+  }
 
   return NextResponse.json({ id, billNumber }, { status: 201 });
   } catch (err) {

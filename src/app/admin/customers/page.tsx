@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AdminNav from "@/components/admin/AdminNav";
 import { Search } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface Customer {
   name: string;
@@ -10,6 +12,7 @@ interface Customer {
   visitCount: number;
   lastVisit: string | null;
   source: "appointment" | "imported";
+  walletBalance: number;
 }
 
 function formatLastVisit(date: string | null): string {
@@ -20,6 +23,7 @@ function formatLastVisit(date: string | null): string {
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -110,26 +114,36 @@ export default function CustomersPage() {
           <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
             {/* Table header */}
             <div className="hidden sm:grid grid-cols-12 gap-3 border-b border-zinc-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              <div className="col-span-4">Name</div>
+              <div className="col-span-3">Name</div>
               <div className="col-span-3">Phone</div>
-              <div className="col-span-2 text-center">Visits</div>
+              <div className="col-span-1 text-center">Visits</div>
               <div className="col-span-2">Last Visit</div>
+              <div className="col-span-2">Wallet</div>
               <div className="col-span-1" />
             </div>
 
             {/* Rows */}
             <div className="divide-y divide-zinc-50">
               {customers.map((c, i) => (
-                <div key={`${c.phone}-${i}`} className="grid grid-cols-12 gap-3 items-center px-4 py-3 hover:bg-zinc-50 transition">
-                  <div className="col-span-7 sm:col-span-4">
+                <div key={`${c.phone}-${i}`}
+                  onClick={() => c.phone && router.push(`/admin/customers/${encodeURIComponent(c.phone)}`)}
+                  className={`grid grid-cols-12 gap-3 items-center px-4 py-3 hover:bg-zinc-50 transition ${c.phone ? "cursor-pointer" : ""}`}>
+                  <div className="col-span-7 sm:col-span-3">
                     <p className="font-semibold text-zinc-900 text-sm">{c.name}</p>
                     <p className="text-xs text-zinc-400 sm:hidden">{c.phone}</p>
-                    {c.source === "imported" && (
-                      <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 mt-0.5">imported</span>
-                    )}
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {c.source === "imported" && (
+                        <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">imported</span>
+                      )}
+                      {c.walletBalance > 0 && (
+                        <span className="sm:hidden inline-block rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                          {formatCurrency(c.walletBalance)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="hidden sm:block col-span-3 text-sm text-zinc-600">{c.phone}</div>
-                  <div className="hidden sm:block col-span-2 text-center">
+                  <div className="hidden sm:block col-span-1 text-center">
                     {c.visitCount > 0 ? (
                       <span className="inline-block rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-bold text-white">
                         {c.visitCount}
@@ -139,11 +153,19 @@ export default function CustomersPage() {
                     )}
                   </div>
                   <div className="hidden sm:block col-span-2 text-xs text-zinc-500">{formatLastVisit(c.lastVisit)}</div>
+                  <div className="hidden sm:block col-span-2 text-sm">
+                    {c.walletBalance > 0 ? (
+                      <span className="font-semibold text-green-700">{formatCurrency(c.walletBalance)}</span>
+                    ) : (
+                      <span className="text-zinc-300">—</span>
+                    )}
+                  </div>
                   <div className="col-span-5 sm:col-span-1 flex justify-end">
                     <a
                       href={waLink(c.phone, c.name)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 hover:bg-green-100 transition"
                       title="WhatsApp"
                     >

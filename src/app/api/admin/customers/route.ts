@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { ensureWalletTables } from "@/lib/wallet";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export async function GET(req: NextRequest) {
 
   const search = new URL(req.url).searchParams.get("q")?.trim().toLowerCase() ?? "";
   const sql = getSql();
+  await ensureWalletTables();
+
+  const wallets = await sql`SELECT customer_phone, balance, bonus_balance FROM wallets` as { customer_phone: string; balance: string; bonus_balance: string }[];
+  const walletMap = new Map(wallets.map(w => [w.customer_phone, Number(w.balance) + Number(w.bonus_balance)]));
 
   // Customers from appointments (with visit count)
   const fromAppts = await sql`
@@ -43,6 +48,7 @@ export async function GET(req: NextRequest) {
       visitCount: parseInt(r.visit_count),
       lastVisit: r.last_visit,
       source: r.source,
+      walletBalance: walletMap.get(r.phone) ?? 0,
     })),
     ...importedFiltered.map(r => ({
       name: r.name,
@@ -50,6 +56,7 @@ export async function GET(req: NextRequest) {
       visitCount: 0,
       lastVisit: r.last_visit ?? null,
       source: r.source,
+      walletBalance: walletMap.get(r.phone) ?? 0,
     })),
   ];
 

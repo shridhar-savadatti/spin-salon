@@ -176,10 +176,61 @@ export async function initDb() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS wallets (
+      id TEXT PRIMARY KEY,
+      customer_phone TEXT NOT NULL UNIQUE,
+      customer_name TEXT NOT NULL,
+      balance DECIMAL NOT NULL DEFAULT 0,
+      bonus_balance DECIMAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS wallet_plans (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      recharge_amount DECIMAL NOT NULL,
+      credit_amount DECIMAL NOT NULL,
+      bonus_amount DECIMAL NOT NULL DEFAULT 0,
+      is_active SMALLINT NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS wallet_transactions (
+      id TEXT PRIMARY KEY,
+      wallet_id TEXT NOT NULL,
+      customer_phone TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      amount DECIMAL NOT NULL,
+      principal_amount DECIMAL NOT NULL DEFAULT 0,
+      bonus_amount DECIMAL NOT NULL DEFAULT 0,
+      balance_after DECIMAL NOT NULL,
+      bonus_balance_after DECIMAL NOT NULL,
+      reference_type TEXT,
+      reference_id TEXT,
+      payment_method TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
   // Add link column to announcements if missing
   try {
     await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS link TEXT`;
   } catch { /* already exists */ }
+
+  // Add wallet columns to bills if missing
+  try {
+    await sql`ALTER TABLE bills ADD COLUMN IF NOT EXISTS wallet_amount DECIMAL NOT NULL DEFAULT 0`;
+    await sql`ALTER TABLE bills ADD COLUMN IF NOT EXISTS wallet_transaction_id TEXT`;
+  } catch { /* columns already exist */ }
 
   // Add new columns to appointments if missing
   try {

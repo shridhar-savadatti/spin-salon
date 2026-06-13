@@ -141,3 +141,42 @@ export interface GalleryImage {
   category: "haircut" | "coloring" | "styling" | "treatment";
   label?: string;
 }
+
+export interface WalletPlan {
+  id: string;
+  name: string;
+  rechargeAmount: number;
+  creditAmount: number;
+  bonusAmount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WalletTransactionType = "recharge" | "usage" | "refund" | "bonus" | "adjustment";
+export type WalletReferenceType = "bill" | "wallet_plan" | "manual";
+
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  customerPhone: string;
+  customerName: string;
+  type: WalletTransactionType;
+  amount: number;
+  principalAmount: number;
+  bonusAmount: number;
+  balanceAfter: number;
+  bonusBalanceAfter: number;
+  referenceType: WalletReferenceType | null;
+  referenceId: string | null;
+  paymentMethod: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface Wallet {
+  customerPhone: string;
+  customerName: string;
+  balance: number;
+  bonusBalance: number;
+}
