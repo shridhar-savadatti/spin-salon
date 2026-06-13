@@ -51,21 +51,44 @@ function buildWaLink(appointment: Appointment, status: string): string {
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
-// Persistent alarm — plays repeating MP3 alarm until dismissed
+// Alarm — plays repeating MP3 alarm for 10 seconds, or until dismissed
 let alarmAudio: HTMLAudioElement | null = null;
+let alarmTimeout: ReturnType<typeof setTimeout> | null = null;
+let audioUnlocked = false;
+
+// Browsers block audio.play() until the page has had a user gesture.
+// Prime a silent play on the first tap/click so the later background
+// alarm (triggered by a polling timer, not a click) is allowed to play.
+function unlockAlarmAudio() {
+  if (audioUnlocked) return;
+  try {
+    const audio = new Audio("/alarm.mp3");
+    audio.volume = 0;
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+      audioUnlocked = true;
+    }).catch(() => {});
+  } catch { /* ignore */ }
+}
 
 function startPersistentAlarm() {
   try {
-    if (alarmAudio) { alarmAudio.pause(); alarmAudio = null; }
+    stopPersistentAlarm();
     const audio = new Audio("/alarm.mp3");
     audio.loop = true;
     audio.volume = 1.0;
     alarmAudio = audio;
     audio.play().catch(() => {});
+    alarmTimeout = setTimeout(stopPersistentAlarm, 10000);
   } catch { /* ignore */ }
 }
 
 function stopPersistentAlarm() {
+  if (alarmTimeout) {
+    clearTimeout(alarmTimeout);
+    alarmTimeout = null;
+  }
   if (alarmAudio) {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
@@ -360,6 +383,17 @@ export default function AdminAppointmentsPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Unlock alarm audio on first tap/click so the background poll can play it later
+  useEffect(() => {
+    const unlock = () => unlockAlarmAudio();
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("touchstart", unlock, { once: true });
+    return () => {
+      document.removeEventListener("click", unlock);
+      document.removeEventListener("touchstart", unlock);
+    };
+  }, []);
+
   // Auto-poll every 30 seconds silently
   useEffect(() => {
     const interval = setInterval(() => load(true), 30000);
@@ -527,7 +561,7 @@ export default function AdminAppointmentsPage() {
                 <button
                   onClick={() => { stopPersistentAlarm(); setNewCount(0); setFilter("pending"); }}
                   className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-green-700 hover:bg-green-50 shrink-0 shadow-md">
-                  View & Stop Alarm
+                  View
                 </button>
               </div>
             </div>

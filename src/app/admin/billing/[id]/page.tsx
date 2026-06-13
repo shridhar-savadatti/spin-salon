@@ -95,12 +95,10 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
               className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition">
               <Printer className="h-3.5 w-3.5" /> Print / PDF
             </button>
-            {waPhone && (
-              <a href={`https://wa.me/${waPhone}?text=${waMsg}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition">
-                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-              </a>
-            )}
+            <a href={`https://wa.me/${waPhone}?text=${waMsg}`} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition">
+              <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+            </a>
             <span className="ml-auto rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
               PAID
             </span>
