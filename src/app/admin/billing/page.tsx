@@ -104,6 +104,7 @@ export default function BillingPOS() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletBonusBalance, setWalletBonusBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
+  const [applyGst, setApplyGst] = useState(true);
 
   // History state
   const today = new Date().toISOString().split("T")[0];
@@ -158,6 +159,7 @@ export default function BillingPOS() {
         if (data) {
           setWalletBalance(data.balance);
           setWalletBonusBalance(data.bonusBalance);
+          if (data.balance + data.bonusBalance > 0) setUseWallet(true);
         }
       });
   }, [customer?.phone]);
@@ -175,7 +177,7 @@ export default function BillingPOS() {
     return Math.min(v, subtotal);
   })();
   const afterDiscount = subtotal - discountAmt;
-  const gstAmt = Math.round(afterDiscount * GST_RATE);
+  const gstAmt = applyGst ? Math.round(afterDiscount * GST_RATE) : 0;
   const total = afterDiscount + gstAmt;
 
   const walletAvailable = walletBalance + walletBonusBalance;
@@ -594,7 +596,14 @@ export default function BillingPOS() {
               {discountAmt > 0 && (
                 <div className="flex justify-between text-green-600"><span>Discount</span><span>−{formatCurrency(discountAmt)}</span></div>
               )}
-              <div className="flex justify-between text-zinc-500"><span>GST (5%)</span><span>{formatCurrency(gstAmt)}</span></div>
+              <label className="flex items-center justify-between cursor-pointer text-zinc-500">
+                <span className="flex items-center gap-2">
+                  <input type="checkbox" checked={applyGst} onChange={e => setApplyGst(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded accent-zinc-900" />
+                  GST (5%)
+                </span>
+                <span>{formatCurrency(gstAmt)}</span>
+              </label>
               <div className="flex justify-between border-t border-zinc-200 pt-2 font-bold text-zinc-900 text-base">
                 <span>Total</span><span>{formatCurrency(total)}</span>
               </div>
